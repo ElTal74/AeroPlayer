@@ -1,0 +1,18 @@
+{
+ "import_qt_ms": 121.0,
+ "import_app_ms": 468.6,
+ "build_window_ms": 371.8,
+ "first_paint_ms": 219.3,
+ "startup_total_ms": 1255.4,
+ "mem_after_start_mb": 588.2,
+ "cpu_idle_pct": 0.94,
+ "page_switch_ms_avg": 28.4,
+ "page_switch_ms_max": 41.8,
+ "render_bg_1600x950_ms": 25.9,
+ "render_bg_2560x1440_ms": 43.3,
+ "resize_ms": 13.0,
+ "open_image_ms": 23.8,
+ "open_pdf_ms": 8.9,
+ "cpu_playing_visualizer_pct": 43.8,
+ "mem_after_use_mb": 620.7
+}

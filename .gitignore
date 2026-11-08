@@ -1,0 +1,19 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec.bak
+.pytest_cache/
+.ruff_cache/
+# Binarios de terceros que se descargan en el empaquetado (no se versionan)
+bin/
+# Medios generados por las pruebas (se regeneran con tests/make_media.py)
+tests/media/
+build_log.txt
+.devrun/
+
+# Núcleo nativo (se compila con packaging/build.ps1 o tools/build_native.py)
+native/aero_core/target/
+aero/aero_core.pyd
+

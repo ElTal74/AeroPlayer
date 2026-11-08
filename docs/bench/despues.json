@@ -1,0 +1,22 @@
+{
+ "import_qt_ms": 127.4,
+ "import_app_ms": 310.3,
+ "build_window_ms": 166.0,
+ "first_paint_ms": 101.1,
+ "startup_total_ms": 775.8,
+ "mem_after_start_mb": 71.2,
+ "cpu_idle_pct": 0.31,
+ "page_first_visit_ms_avg": 91.6,
+ "page_first_visit_ms_max": 202.8,
+ "page_switch_ms_avg": 16.9,
+ "page_switch_ms_max": 29.8,
+ "render_bg_1600x950_ms": 2.2,
+ "render_bg_2560x1440_ms": 3.8,
+ "resize_ms": 9.300000000000011,
+ "open_image_ms": 7.2,
+ "open_pdf_ms": 7.0,
+ "cpu_playing_visualizer_pct": 16.0,
+ "cpu_playing_video_pct": 18.8,
+ "mem_after_use_mb": 243.0,
+ "viewer_window_image_4000x3000_ms": 118.0
+}

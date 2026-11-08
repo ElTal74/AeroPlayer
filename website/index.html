@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AERO Player — reproductor y herramientas multimedia para Windows</title>
+<meta name="description" content="AERO Player: reproductor de música y vídeo, visor universal, editores y conversor para Windows, con estilo Aero. Gratis, libre y sin telemetría.">
+<meta property="og:title" content="AERO Player">
+<meta property="og:description" content="Reproductor, visor, editores y conversor para Windows con estilo Aero. Gratis y libre.">
+<meta property="og:image" content="assets/capturas/inicio.png">
+<meta name="theme-color" content="#2b8fe0">
+<link rel="icon" href="assets/favicon.png">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<div class="sky" aria-hidden="true">
+  <div class="sun"></div>
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
+  <div class="bubbles" id="bubbles"></div>
+  <svg class="hills" viewBox="0 0 1440 320" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8f27a"/><stop offset=".45" stop-color="#5cc531"/><stop offset="1" stop-color="#1f7a1c"/></linearGradient>
+      <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4fa9c"/><stop offset=".5" stop-color="#78d640"/><stop offset="1" stop-color="#2f8f25"/></linearGradient>
+      <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    </defs>
+    <path d="M0 170 C 240 90 420 120 640 160 S 1080 230 1440 130 L1440 320 L0 320 Z" fill="url(#g1)"/>
+    <path d="M0 230 C 260 170 520 200 760 230 S 1180 270 1440 210 L1440 320 L0 320 Z" fill="url(#g2)"/>
+    <path d="M0 232 C 260 172 520 202 760 232 S 1180 272 1440 212 L1440 236 C 1180 296 980 256 760 252 S 260 196 0 256 Z" fill="url(#shine)"/>
+  </svg>
+</div>
+
+<header class="taskbar">
+  <a class="brand" href="#inicio"><img src="assets/logo.png" alt="" width="34" height="34"><span>AERO Player</span></a>
+  <nav>
+    <a href="#funciones" data-i18n="nav.features">Funciones</a>
+    <a href="#capturas" data-i18n="nav.shots">Capturas</a>
+    <a href="#descargar" data-i18n="nav.download">Descargar</a>
+    <a href="#preguntas" data-i18n="nav.faq">Preguntas</a>
+    <a class="gh" data-gh-link href="#" target="_blank" rel="noopener">GitHub</a>
+    <button class="lang" id="lang" type="button" aria-label="Idioma / Language">EN</button>
+  </nav>
+</header>
+
+<main>
+  <section class="hero" id="inicio">
+    <div class="hero-text">
+      <img class="orb" src="assets/logo.png" alt="Logotipo de AERO Player" width="128" height="128">
+      <h1>AERO Player</h1>
+      <p class="tagline" data-i18n="hero.tagline">Tu música, tus vídeos y tus archivos, con el cristal, el cielo y las burbujas de Windows 7.</p>
+      <p class="sub" data-i18n="hero.sub">Reproductor, visor universal, editores, conversor y mucho más. Gratis, libre y sin telemetría.</p>
+      <div class="cta">
+        <a class="btn-aero" data-download="setup" href="#descargar">
+          <span class="btn-icon"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span><strong data-i18n="hero.download">Descargar para Windows</strong><small data-version-line>Versión 1.0.0 · Windows 10 y 11 · 64 bits</small></span>
+        </a>
+        <a class="btn-glass" data-gh-link href="#" target="_blank" rel="noopener" data-i18n="hero.source">Ver el código en GitHub</a>
+      </div>
+    </div>
+    <figure class="win7">
+      <div class="win7-bar"><span class="win7-title">AERO Player</span><span class="win7-btns"><i></i><i></i><i class="x"></i></span></div>
+      <img src="assets/capturas/reproductor.png" alt="AERO Player reproduciendo música con un visualizador" loading="eager">
+    </figure>
+  </section>
+
+  <section class="panel" id="funciones">
+    <h2 data-i18n="feat.title">Todo en una sola aplicación</h2>
+    <div class="grid">
+      <article class="card"><img src="assets/iconos/audio.png" alt=""><h3 data-i18n="feat.player.t">Reproductor</h3><p data-i18n="feat.player.d">Música y vídeo con cola, subtítulos, pistas de audio, series con siguiente episodio y 11 visualizadores que siguen el sonido real.</p></article>
+      <article class="card"><img src="assets/iconos/image.png" alt=""><h3 data-i18n="feat.viewer.t">Visor universal</h3><p data-i18n="feat.viewer.d">Fotos (también HEIC y AVIF), PDF, documentos, hojas, presentaciones, comprimidos e imágenes de disco. Vista rápida con Espacio desde el Explorador.</p></article>
+      <article class="card"><img src="assets/iconos/video.png" alt=""><h3 data-i18n="feat.editors.t">Editores</h3><p data-i18n="feat.editors.d">Editor de vídeo con línea de tiempo y efectos, editor de imágenes con capas, AERO Paint, documentos, hojas, presentaciones y PDF a editable con OCR.</p></article>
+      <article class="card"><img src="assets/iconos/folder.png" alt=""><h3 data-i18n="feat.files.t">Archivos</h3><p data-i18n="feat.files.d">Explorador con la familia de iconos AERO, búsqueda global ultrarrápida y nada se ejecuta sin que lo confirmes.</p></article>
+      <article class="card"><img src="assets/iconos/archive.png" alt=""><h3 data-i18n="feat.archive.t">Comprimir y extraer</h3><p data-i18n="feat.archive.d">ZIP, 7Z, RAR, TAR e ISO con contraseñas AES-256, protección contra rutas peligrosas y cancelación sin restos.</p></article>
+      <article class="card"><img src="assets/iconos/disc.png" alt=""><h3 data-i18n="feat.disc.t">Imágenes de disco</h3><p data-i18n="feat.disc.d">Explora y extrae ISO, IMG, BIN/CUE, NRG y MDF sin montarlas, o móntalas con Windows cuando quieras.</p></article>
+      <article class="card"><img src="assets/iconos/torrent.png" alt=""><h3 data-i18n="feat.torrent.t">Descargas BitTorrent</h3><p data-i18n="feat.torrent.d">Ve el contenido, elige archivos y descarga. Nada empieza solo, nada se ejecuta y no abre puertos. Se puede desactivar.</p></article>
+      <article class="card"><img src="assets/iconos/document.png" alt=""><h3 data-i18n="feat.convert.t">Conversor por lotes</h3><p data-i18n="feat.convert.d">Imágenes, audio, vídeo y documentos con perfiles, pausa, reintento y sin tocar nunca los originales.</p></article>
+      <article class="card"><img src="assets/iconos/system.png" alt=""><h3 data-i18n="feat.windows.t">Integrado en Windows</h3><p data-i18n="feat.windows.d">«Abrir con», iconos AERO en el Explorador, menú del clic derecho y aplicaciones predeterminadas, siempre con tu permiso.</p></article>
+    </div>
+  </section>
+
+  <section class="panel" id="capturas">
+    <h2 data-i18n="shots.title">Capturas</h2>
+    <div class="tabs" role="tablist" id="shot-tabs"></div>
+    <figure class="win7 big">
+      <div class="win7-bar"><span class="win7-title" id="shot-title">AERO Player</span><span class="win7-btns"><i></i><i></i><i class="x"></i></span></div>
+      <img id="shot-img" src="assets/capturas/inicio.png" alt="">
+    </figure>
+  </section>
+
+  <section class="panel two" id="rendimiento">
+    <div>
+      <h2 data-i18n="perf.title">Ligero y rápido</h2>
+      <p data-i18n="perf.d">Las partes que más trabajan con miles de archivos están escritas en Rust y usan todos los núcleos del procesador sin congelar la ventana.</p>
+      <ul class="stats">
+        <li><b>30×</b><span data-i18n="perf.tags">más rápido leyendo las etiquetas de tu música</span></li>
+        <li><b>4×</b><span data-i18n="perf.scan">más rápido escaneando la biblioteca</span></li>
+        <li><b data-i18n="perf.n3">2,9×</b><span data-i18n="perf.search">más rápido buscando en todo el disco</span></li>
+        <li><b>0 %</b><span data-i18n="perf.idle">de CPU en reposo</span></li>
+      </ul>
+    </div>
+    <div>
+      <h2 data-i18n="priv.title">Tuyo de verdad</h2>
+      <ul class="checks">
+        <li data-i18n="priv.1">Sin telemetría, sin anuncios y sin cuentas.</li>
+        <li data-i18n="priv.2">Software libre (GPL-3.0): puedes ver y mejorar el código.</li>
+        <li data-i18n="priv.3">Nunca mueve, copia ni modifica tus archivos sin pedírtelo.</li>
+        <li data-i18n="priv.4">El instalador no necesita permisos de administrador.</li>
+        <li data-i18n="priv.5">En 7 idiomas: español, inglés, alemán, italiano, portugués, ruso y chino.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="panel" id="descargar">
+    <h2 data-i18n="dl.title">Descargar AERO Player</h2>
+    <p class="muted" data-i18n="dl.sub">Para Windows 10 y Windows 11 de 64 bits.</p>
+    <div class="downloads">
+      <a class="dl" data-download="setup" href="#"><img src="assets/iconos/installer.png" alt=""><span><strong data-i18n="dl.setup">Instalador</strong><small data-i18n="dl.setup.d">Recomendado. Crea accesos directos y se actualiza conservando tus datos.</small><em data-size="setup"></em></span></a>
+      <a class="dl" data-download="portable" href="#"><img src="assets/iconos/archive.png" alt=""><span><strong data-i18n="dl.portable">Portable (ZIP)</strong><small data-i18n="dl.portable.d">Descomprime y ejecuta AeroPlayer.exe. No instala nada.</small><em data-size="portable"></em></span></a>
+    </div>
+    <p class="note" data-i18n="dl.smartscreen">La primera vez, Windows SmartScreen puede avisar porque la aplicación aún no tiene firma digital: pulsa «Más información» › «Ejecutar de todas formas». Puedes comprobar el archivo con las sumas SHA-256 de la página de la versión.</p>
+    <p class="note"><a data-gh-releases href="#" target="_blank" rel="noopener" data-i18n="dl.all">Todas las versiones y notas de cambios</a> · <span data-i18n="dl.ffmpeg">Para convertir vídeo y audio hace falta FFmpeg (la reproducción funciona sin él).</span></p>
+  </section>
+
+  <section class="panel" id="preguntas">
+    <h2 data-i18n="faq.title">Preguntas frecuentes</h2>
+    <details><summary data-i18n="faq.q1">¿Es gratis?</summary><p data-i18n="faq.a1">Sí, totalmente. Es software libre con licencia GPL-3.0: sin anuncios, sin suscripciones y sin recoger datos.</p></details>
+    <details><summary data-i18n="faq.q2">¿Cambia mis programas predeterminados?</summary><p data-i18n="faq.a2">No por su cuenta. AERO Player se añade a «Abrir con» y tú eliges en la Configuración de Windows si quieres usarlo por defecto.</p></details>
+    <details><summary data-i18n="faq.q3">¿Por qué avisa SmartScreen?</summary><p data-i18n="faq.a3">Porque el ejecutable aún no está firmado con un certificado de pago. El código es público y cada versión publica sus sumas SHA-256 para que puedas comprobarlo.</p></details>
+    <details><summary data-i18n="faq.q4">¿Cómo lo desinstalo?</summary><p data-i18n="faq.a4">Desde Configuración de Windows › Aplicaciones › AERO Player. Tus archivos no se tocan.</p></details>
+    <details><summary data-i18n="faq.q5">¿Puedo ayudar o informar de un error?</summary><p data-i18n="faq.a5">¡Claro! Abre una incidencia en GitHub o propón cambios con una solicitud de incorporación (pull request).</p></details>
+  </section>
+</main>
+
+<footer>
+  <p><span data-i18n="foot.1">AERO Player es software libre bajo la licencia GPL-3.0-or-later.</span> <a data-gh-link href="#" target="_blank" rel="noopener">GitHub</a></p>
+  <p class="muted" data-i18n="foot.2">Inspirado en la estética Frutiger Aero. No está afiliado a Microsoft. Windows es una marca de Microsoft Corporation.</p>
+</footer>
+
+<div class="lightbox" id="lightbox" hidden><img alt=""></div>
+<script src="app.js"></script>
+</body>
+</html>

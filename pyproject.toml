@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aero-player"
+version = "1.0.0"
+description = "Reproductor multimedia, visor universal y conversor de archivos con estética Frutiger Aero"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "PySide6-Essentials>=6.8",
+    "PySide6-Addons>=6.8",
+    "numpy>=2.0",
+    "Pillow>=11.0",
+    "pillow-heif>=0.20",
+    "mutagen>=1.47",
+    "python-calamine>=0.3",
+    "mammoth>=1.8",
+    "odfpy>=1.4",
+    "python-pptx>=1.0",
+    "striprtf>=0.0.26",
+    "Markdown>=3.6",
+    "pywin32>=306; sys_platform == 'win32'",
+    "py7zr>=1.0",
+    "pyzipper>=0.3.6",
+    "pycdlib>=1.14",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "pyinstaller>=6.16", "openpyxl>=3.1", "python-docx>=1.1"]
+
+[project.gui-scripts]
+aero-player = "aero.app:main"
+
+[tool.setuptools.packages.find]
+include = ["aero*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E9", "F", "B"]
+ignore = ["B008", "B023", "B905"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-p no:cacheprovider"

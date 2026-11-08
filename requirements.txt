@@ -1,0 +1,28 @@
+# Versiones fijadas y verificadas en Windows 11 + Python 3.14 (ver docs/PRUEBAS.md)
+PySide6-Essentials==6.12.0
+PySide6-Addons==6.12.0
+numpy==2.5.4
+pillow==13.0.0
+pillow_heif==1.8.1
+mutagen==1.48.1
+python-calamine==0.9.0
+mammoth==1.13.0
+odfpy==1.4.1
+python-pptx==1.0.2
+striprtf==0.0.35
+Markdown==3.11.2
+pywin32==312; sys_platform == "win32"
+pypdfium2==5.14.0
+openpyxl==3.1.5
+python-docx==1.2.0
+winrt-runtime==4.1.0; sys_platform == "win32"
+winrt-Windows.Media.Ocr==4!10.0.28000.2957; sys_platform == "win32"
+winrt-Windows.Graphics.Imaging==4!10.0.28000.2957; sys_platform == "win32"
+winrt-Windows.Storage.Streams==4!10.0.28000.2957; sys_platform == "win32"
+winrt-Windows.Foundation==4!10.0.28000.2957; sys_platform == "win32"
+winrt-Windows.Foundation.Collections==4!10.0.28000.2957; sys_platform == "win32"
+winrt-Windows.Globalization==4!10.0.28000.2957; sys_platform == "win32"
+py7zr==1.1.4
+pyzipper==0.4.0
+pycryptodomex==3.24.1
+pycdlib==1.22.0

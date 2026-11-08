@@ -1,0 +1,48 @@
+# Compila AERO Player en Windows y publica la versión con el instalador, el portable y las sumas SHA-256.
+# Se lanza al subir una etiqueta «v1.0.0», «v1.1.0»… (o a mano desde la pestaña Actions).
+name: Versión
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Dependencias
+        run: |
+          python -m venv .venv
+          .venv\Scripts\python -m pip install --upgrade pip
+          .venv\Scripts\pip install -r requirements-dev.txt
+      - name: Comprobaciones rápidas
+        run: |
+          .venv\Scripts\python -m ruff check aero tests tools
+          .venv\Scripts\python tools\i18n_keys.py --strict
+      - name: Compilar (núcleo Rust, programa, instalador y portable)
+        run: powershell -ExecutionPolicy Bypass -File packaging\build.ps1 -SkipTests
+      - name: Comprobar el ejecutable
+        run: |
+          dist\AeroPlayer\AeroPlayer.exe --diagnostico diag.json
+          Start-Sleep 5
+          Get-Content diag.json
+      - name: Publicar la versión
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AERO Player ${{ github.ref_name }}
+          body_path: CHANGELOG.md
+          files: |
+            dist/AeroPlayer-*-setup.exe
+            dist/AeroPlayer-*-portable.zip
+            dist/SHA256SUMS.txt

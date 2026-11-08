@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"        # la misma que en desarrollo y en «Versión» (incluye PySide6.QtPdf)
+          cache: pip
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Instalar FFmpeg
+        run: choco install ffmpeg -y --no-progress
+      - name: Dependencias
+        run: |
+          python -m venv .venv
+          .venv\Scripts\pip install -r requirements-dev.txt
+      - name: Núcleo nativo (Rust)
+        run: .venv\Scripts\python tools\build_native.py
+      - name: Lint
+        run: .venv\Scripts\ruff check aero tests tools
+      - name: Pruebas
+        run: .venv\Scripts\python -m pytest -q
+      - name: Paquete portable
+        run: |
+          .venv\Scripts\python packaging\make_icon.py
+          .venv\Scripts\python -m PyInstaller packaging\aero.spec --noconfirm --distpath dist --workpath build
+          Compress-Archive -Path dist\AeroPlayer\* -DestinationPath dist\AeroPlayer-portable.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AeroPlayer-portable
+          path: dist/AeroPlayer-portable.zip

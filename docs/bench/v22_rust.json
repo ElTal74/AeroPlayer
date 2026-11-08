@@ -1,0 +1,9 @@
+{
+ "listar_5100_rust_ms": 42.1,
+ "listar_5100_python_ms": 64.3,
+ "estadisticas_50k_rust_ms": 99.3,
+ "estadisticas_50k_python_ms": 163.8,
+ "buscar_50k_rust_ms": 134.5,
+ "buscar_50k_python_ms": 396.3,
+ "hilo_python_activo_durante_rust_pct": 66.9
+}
