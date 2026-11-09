@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import sys
 from dataclasses import dataclass, field
 
 GB = 1024 ** 3
@@ -56,8 +57,14 @@ class _DISPLAY_DEVICE(ctypes.Structure):
 
 
 def memory() -> tuple[int, int]:
-    if os.name != "nt":
-        return 0, 0
+    if sys.platform != "win32":
+        try:
+            import psutil
+
+            vm = psutil.virtual_memory()
+            return int(vm.total), int(vm.available)
+        except (ImportError, OSError, AttributeError):
+            return 0, 0
     m = _MEMSTATUS()
     m.dwLength = ctypes.sizeof(m)
     if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m)):
@@ -65,7 +72,33 @@ def memory() -> tuple[int, int]:
     return int(m.ullTotalPhys), int(m.ullAvailPhys)
 
 
+def _sysctl_str(name: str) -> str:
+    """Valor de texto de `sysctlbyname` (macOS), sin procesos externos."""
+    try:
+        libc = ctypes.CDLL(None)
+        size = ctypes.c_size_t(0)
+        if libc.sysctlbyname(name.encode(), None, ctypes.byref(size), None, 0) or not size.value:
+            return ""
+        buf = ctypes.create_string_buffer(size.value)
+        if libc.sysctlbyname(name.encode(), buf, ctypes.byref(size), None, 0):
+            return ""
+        return buf.value.decode("utf-8", "replace").strip()
+    except (OSError, AttributeError):
+        return ""
+
+
 def _cpu_name() -> str:
+    if sys.platform == "darwin":
+        return _sysctl_str("machdep.cpu.brand_string")
+    if sys.platform != "win32":
+        try:
+            with open("/proc/cpuinfo", encoding="utf-8", errors="replace") as fh:
+                for line in fh:
+                    if line.lower().startswith(("model name", "hardware")):
+                        return " ".join(line.split(":", 1)[1].split())
+        except OSError:
+            pass
+        return ""
     try:
         import winreg
 
@@ -114,8 +147,14 @@ class CpuLoad:
 
     @staticmethod
     def _times():
-        if os.name != "nt":
-            return None
+        if sys.platform != "win32":
+            try:
+                import psutil
+
+                ct = psutil.cpu_times()
+                return ct.idle, sum(ct)
+            except (ImportError, OSError, AttributeError):
+                return None
         idle, kernel, user = (ctypes.c_ulonglong() for _ in range(3))
         if not ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kernel), ctypes.byref(user)):
             return None

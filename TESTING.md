@@ -84,6 +84,24 @@ La trazabilidad completa (captura → causa → solución → prueba) está en
 
 **Total 1.2: 75 pruebas automáticas superadas.**
 
+## Versión pública 1.2.0 (2026-11-09)
+
+**Windows: 298 pruebas automáticas superadas, 2 omitidas** (8 min 18 s en el escritorio oculto). **Linux (Ubuntu
+24.04, servidor X virtual) y macOS 15 (Apple Silicon): 279 superadas y 22 omitidas en cada uno**, en GitHub
+Actions (`.github/workflows/plataformas.yml`). Las omitidas son las del instalador, el registro y el Explorador,
+que solo existen en Windows.
+
+| Área | Estado | Cómo |
+| --- | --- | --- |
+| «Usar AERO Player para todo»: Windows (registro y página de Configuración), Linux (`xdg-mime`), macOS | A | `tests/test_v24.py` |
+| Casilla del instalador que abre Aplicaciones predeterminadas | A | Prueba de interfaz |
+| Inicio automático y carpetas de datos en Linux y macOS | A | Prueba con el sistema simulado |
+| Núcleo Rust en Linux y macOS (rutas con «/», errores con su errno) | A | `tests/test_v22_rust.py` en los tres sistemas |
+| «Tu equipo» en Linux y macOS (procesador, memoria, discos, batería) | A | Prueba de los widgets en CI |
+| PDF desde documentos con el texto bien unido (antes troceado en Linux) | A + R | Diagnóstico en CI con 9 variantes; 1200 ppp no cambia la maquetación en Windows |
+| Estados vacíos de Listas y del conversor | R | Capturas de revisión |
+| Web: pestañas Windows / Linux / macOS, detección del sistema, 7 idiomas, móvil sin desbordes | R | Navegador |
+
 ## Versión pública 1.1.0 (2026-11-09)
 
 **289 pruebas automáticas superadas, 2 omitidas** (13 min 42 s en el escritorio oculto), `ruff` sin avisos y

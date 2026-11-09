@@ -1,13 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
 # Especificación de PyInstaller para AERO Player (modo carpeta: arranque más rápido que un único .exe).
 # Uso:  pyinstaller packaging/aero.spec --noconfirm
+# Windows: carpeta con AeroPlayer.exe · Linux: carpeta con el ejecutable AeroPlayer · macOS: AeroPlayer.app
 
 import sys
 from pathlib import Path
 
 ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH lo define PyInstaller
 sys.path.insert(0, str(ROOT / "packaging"))
-from version_info import write  # noqa: E402
+WIN, MAC = sys.platform == "win32", sys.platform == "darwin"
+if WIN:
+    from version_info import write  # noqa: E402 - información de versión del .exe
+sys.path.insert(0, str(ROOT))
+from aero import __version__  # noqa: E402
 
 # Módulos de Qt que AERO Player no usa: excluirlos reduce cientos de MB.
 QT_EXCLUDES = [
@@ -33,13 +38,14 @@ a = Analysis(  # noqa: F821
            (str(ROOT / "packaging" / "icons"), "icons")],      # iconos .ico de las categorías para el Explorador
     # Módulos que se cargan bajo demanda (editores, OCR, PDF a editable): PyInstaller los encuentra al analizar
     # las importaciones dentro de funciones, pero se listan para que no dependa de ello.
-    hiddenimports=["win32com.shell", "pythoncom", "pywintypes", "pypdfium2", "pypdfium2_raw", "openpyxl",
-                   "docx", "pptx", "odf.opendocument", "winrt.windows.media.ocr", "winrt.windows.globalization",
-                   "winrt.windows.graphics.imaging", "winrt.windows.storage.streams", "winrt.windows.foundation",
-                   "winrt.windows.foundation.collections", "PySide6.QtMultimediaWidgets",
+    hiddenimports=["pypdfium2", "pypdfium2_raw", "openpyxl",
+                   "docx", "pptx", "odf.opendocument", "PySide6.QtMultimediaWidgets",
                    "py7zr", "pyzipper", "Cryptodome", "pyppmd", "pybcj", "inflate64", "multivolumefile", "brotli",
-                   "aero.installer.ui", "win32com.propsys", "pycdlib", "aero.torrent.ui", "aero.torrent.engine",
-                   "aero.aero_core"],
+                   "pycdlib", "aero.torrent.ui", "aero.torrent.engine", "aero.aero_core"]
+                  + (["win32com.shell", "pythoncom", "pywintypes", "winrt.windows.media.ocr",
+                      "winrt.windows.globalization", "winrt.windows.graphics.imaging", "winrt.windows.storage.streams",
+                      "winrt.windows.foundation", "winrt.windows.foundation.collections", "aero.installer.ui",
+                      "win32com.propsys"] if WIN else []),
     # pycdlib (LGPL-2.1) se incluye como archivos .py sueltos en _internal\pycdlib: se puede sustituir por otra
     # versión sin recompilar AERO Player, como pide la LGPL.
     module_collection_mode={"pycdlib": "py"},
@@ -66,10 +72,10 @@ exe = EXE(  # noqa: F821
     [],
     exclude_binaries=True,
     name="AeroPlayer",
-    icon=str(ROOT / "packaging" / "aero.ico"),
+    icon=str(ROOT / "packaging" / ("aero.ico" if WIN else "aero.icns")),
     console=False,
     disable_windowed_traceback=False,
-    version=str(write(ROOT / "build" / "version_app.txt", "AERO Player", "AeroPlayer", "AeroPlayer.exe")),
+    version=str(write(ROOT / "build" / "version_app.txt", "AERO Player", "AeroPlayer", "AeroPlayer.exe")) if WIN else None,
 )
 
 coll = COLLECT(  # noqa: F821
@@ -77,3 +83,26 @@ coll = COLLECT(  # noqa: F821
     strip=False, upx=False,
     name="AeroPlayer",
 )
+
+if MAC:
+    # Tipos de archivo que AERO Player ofrece abrir («Abrir con» del Finder)
+    from aero.core.associations import CATEGORIES  # noqa: E402
+
+    exts = sorted({e.lstrip(".") for c in CATEGORIES for e in c.exts})
+    app = BUNDLE(  # noqa: F821
+        coll,
+        name="AeroPlayer.app",
+        icon=str(ROOT / "packaging" / "aero.icns"),
+        bundle_identifier="io.github.eltal74.aeroplayer",
+        info_plist={
+            "CFBundleName": "AERO Player",
+            "CFBundleDisplayName": "AERO Player",
+            "CFBundleShortVersionString": __version__,
+            "CFBundleVersion": __version__,
+            "NSHumanReadableCopyright": "© 2026 David Seva Gonzalvez. GPL-3.0-or-later",
+            "NSHighResolutionCapable": True,
+            "LSMinimumSystemVersion": "14.0",
+            "CFBundleDocumentTypes": [{"CFBundleTypeName": "Archivo multimedia", "CFBundleTypeRole": "Viewer",
+                                       "LSHandlerRank": "Alternate", "CFBundleTypeExtensions": exts}],
+        },
+    )

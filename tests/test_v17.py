@@ -1,6 +1,9 @@
 """1.7: AERO Paint, biblioteca de efectos y transiciones, tareas, formato .aeroarchive, búsqueda e idiomas."""
 
+import sys
 import time
+
+import pytest
 
 from PySide6.QtCore import QEvent, QPointF, Qt
 from PySide6.QtGui import QColor, QImage, QMouseEvent
@@ -328,6 +331,7 @@ def test_aeroarchive_roundtrip_integrity_and_recovery(tmp_path):
     assert not ok and "más nueva" in msg
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="solo Windows (instalador, registro o DWM)")
 def test_own_format_association_only_touches_own_extension():
     import uuid
 
@@ -425,6 +429,7 @@ def test_language_switch_and_plurals(controller, qapp):
         pump(qapp, 0.3)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="solo Windows (instalador, registro o DWM)")
 def test_installer_in_other_language(qapp):
     from aero import i18n
     from aero.installer import ui

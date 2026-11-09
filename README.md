@@ -1,7 +1,7 @@
 # AERO Player
 
 Reproductor multimedia, visor universal, editor de imágenes, vídeo y documentos, y conversor de archivos para
-Windows, con temas y fondos personalizables. Software libre (GPL-3.0-or-later), sin telemetría.
+Windows, Linux y macOS, con temas y fondos personalizables. Software libre (GPL-3.0-or-later), sin telemetría.
 
 **© 2026 David Seva Gonzalvez.** Web oficial y descargas: https://eltal74.github.io/AeroPlayer/ ·
 código: https://github.com/ElTal74/AeroPlayer
@@ -69,8 +69,18 @@ para el diseño técnico y [TESTING.md](TESTING.md) para las pruebas y medicione
 
 ## Instalar y ejecutar (para usuarios)
 
-Descarga `AeroPlayer-1.1.0-setup.exe` (instalador propio, no requiere administrador) o
-`AeroPlayer-1.1.0-portable.zip` (descomprimir y ejecutar `AeroPlayer.exe`) desde Releases.
+Todas las descargas están en [Releases](https://github.com/ElTal74/AeroPlayer/releases/latest) y en la web.
+
+| Sistema | Descarga | Cómo |
+| --- | --- | --- |
+| Windows 10 y 11 (64 bits) | `AeroPlayer-1.2.0-setup.exe` | Instalador propio, no requiere administrador |
+| Windows (portable) | `AeroPlayer-1.2.0-portable.zip` | Descomprimir y ejecutar `AeroPlayer.exe` |
+| Linux (64 bits) | `AeroPlayer-1.2.0-linux-x86_64.tar.gz` | Descomprimir y ejecutar `./install.sh` (menú y «Abrir con») |
+| macOS 14+ (Apple Silicon) | `AeroPlayer-1.2.0-macos-arm64.dmg` | Arrastrar AERO Player a Aplicaciones; la primera vez, clic derecho › Abrir |
+
+En Linux y macOS todo funciona igual salvo lo exclusivo del Explorador de Windows (iconos AERO, menú del clic
+derecho y vista rápida con Espacio). Para hacerlo predeterminado para todos tus archivos: **Ajustes › Archivos y
+asociaciones › Usar AERO Player para todos mis archivos** (también se ofrece al terminar la instalación).
 
 > **La versión portable no incluye el 100 % de las funciones del programa.** Es ideal para un USB o un ordenador
 > donde no puedes instalar nada, pero la integración con Windows y las actualizaciones con un clic son del
@@ -105,7 +115,7 @@ winget install Gyan.FFmpeg
 
 ## Ejecutar desde el código fuente
 
-Requisitos: Windows 10/11 y Python 3.11 o superior.
+Requisitos: Python 3.11 o superior en Windows 10/11, Linux (glibc 2.34+) o macOS 14+. En Linux y macOS, usa `.venv/bin/` en lugar de `.venv\Scripts\`.
 
 ```bash
 python -m venv .venv
@@ -143,6 +153,15 @@ Genera `dist\AeroPlayer\` (portable), `dist\AeroPlayer-<versión>-portable.zip`,
 `packaging/setup.spec` lo une a la interfaz de `aero/installer`) y `dist\SHA256SUMS.txt`. No necesita
 Inno Setup.
 Con `-BundleFFmpeg C:\ruta\ffmpeg\bin` se incluye FFmpeg en el paquete (respeta su licencia).
+
+En Linux y macOS:
+
+```bash
+PY=.venv/bin/python bash packaging/build_unix.sh
+```
+
+Genera `dist/AeroPlayer-<versión>-linux-x86_64.tar.gz` o `dist/AeroPlayer-<versión>-macos-arm64.dmg`. Las tres
+versiones se compilan y publican juntas en GitHub al subir una etiqueta `v*` (`.github/workflows/release.yml`).
 
 ## Arquitectura
 

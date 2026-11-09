@@ -1,6 +1,9 @@
 """1.6: esquinas uniformes, cursor de bordes, compresión fiable y demás mejoras de usabilidad."""
 
+import sys
 import time
+
+import pytest
 
 from PySide6.QtCore import QEvent, QPoint, QPointF, Qt
 from PySide6.QtGui import QMouseEvent
@@ -54,6 +57,7 @@ def test_edge_cursor_is_per_window_and_never_sticks(qapp, monkeypatch):
     b.close()
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="solo Windows (instalador, registro o DWM)")
 def test_every_window_gets_rounded_corners(qapp):
     import ctypes
 

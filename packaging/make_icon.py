@@ -23,6 +23,14 @@ def main() -> None:
     out = ROOT / "packaging" / "aero.ico"
     img.save(out, sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     print(out)
+    # Linux (.desktop) y macOS (.icns del paquete .app): a 512 px
+    buf = QBuffer()
+    buf.open(QIODevice.OpenModeFlag.WriteOnly)
+    make_app_icon(512).save(buf, "PNG")
+    big = Image.open(io.BytesIO(bytes(buf.data())))
+    big.save(ROOT / "packaging" / "aero.png")
+    big.save(ROOT / "packaging" / "aero.icns")
+    print(ROOT / "packaging" / "aero.icns")
     # Icono de los archivos .aeroarchive: caja de archivo con cremallera y el sello de AERO Player
     buf = QBuffer()
     buf.open(QIODevice.OpenModeFlag.WriteOnly)

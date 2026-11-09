@@ -242,6 +242,7 @@ def test_installer_window_pages(qapp, tmp_path, monkeypatch):
     pump(qapp, 100)
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="solo Windows (instalador, registro o DWM)")
 def test_installer_without_payload_explains_problem(qapp):
     from aero.installer import ui
 

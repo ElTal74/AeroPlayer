@@ -1,0 +1,75 @@
+# Pruebas y paquetes de Linux y macOS (Windows está en ci.yml y release.yml).
+name: Linux y macOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Bibliotecas del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg xvfb libegl1 libgl1 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 libxcb-xfixes0 libpulse0 libfontconfig1 libdbus-1-3 \
+            fonts-dejavu-core
+      - name: FFmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+      - name: Dependencias
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+      - name: Núcleo nativo (Rust)
+        run: .venv/bin/python tools/build_native.py
+      - name: Lint
+        run: .venv/bin/ruff check aero tests tools
+      # Plataforma real de cada sistema («offscreen» no tiene fuentes y falsearía las pruebas de texto y PDF)
+      - name: Pruebas (Linux, servidor X virtual)
+        if: runner.os == 'Linux'
+        env:
+          QT_QPA_PLATFORM: xcb
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" .venv/bin/python -m pytest -q -p no:cacheprovider -rfE
+      - name: Pruebas (macOS)
+        if: runner.os == 'macOS'
+        env:
+          QT_QPA_PLATFORM: cocoa
+        run: .venv/bin/python -m pytest -q -p no:cacheprovider -rfE
+      - name: Paquete
+        if: success() || failure()        # el paquete se comprueba aunque falle alguna prueba
+        env:
+          PY: .venv/bin/python
+        run: bash packaging/build_unix.sh
+      - name: Comprobar el ejecutable
+        if: success() || failure()        # el paquete se comprueba aunque falle alguna prueba
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then EXE=dist/AeroPlayer.app/Contents/MacOS/AeroPlayer; else EXE=dist/AeroPlayer/AeroPlayer; fi
+          "$EXE" --diagnostico diag.json
+          cat diag.json
+          python3 -c "import json,sys; d=json.load(open('diag.json')); sys.exit(0 if d['qt_completo'] else 1)"
+      - uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: AeroPlayer-${{ runner.os }}
+          path: |
+            dist/*.tar.gz
+            dist/*.dmg
+            dist/SHA256SUMS-*.txt

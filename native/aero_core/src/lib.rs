@@ -136,8 +136,10 @@ fn mtime(meta: &fs::Metadata) -> f64 {
 fn os_err(e: std::io::Error, path: &str) -> PyErr {
     // OSError(errno, texto, ruta, winerror): con winerror, Python elige la subclase igual que os.scandir
     // (FileNotFoundError, PermissionError, NotADirectoryError…).
+    // En Linux y macOS el código es un errno: OSError(errno, texto, ruta) elige la subclase igual.
     match e.raw_os_error() {
-        Some(code) => PyOSError::new_err((0, e.to_string(), path.to_string(), code)),
+        Some(code) if cfg!(windows) => PyOSError::new_err((0, e.to_string(), path.to_string(), code)),
+        Some(code) => PyOSError::new_err((code, e.to_string(), path.to_string())),
         None => PyOSError::new_err((0, e.to_string(), path.to_string())),
     }
 }
@@ -290,12 +292,14 @@ fn search(
     Ok(out)
 }
 
-/// os.path.join en Windows: añade «\» salvo que ya termine en separador.
+/// os.path.join: añade el separador del sistema («\» en Windows, «/» en Linux y macOS) salvo que ya termine en uno.
 fn join(dir: &str, name: &str) -> String {
     if dir.ends_with('\\') || dir.ends_with('/') {
         format!("{dir}{name}")
-    } else {
+    } else if cfg!(windows) {
         format!("{dir}\\{name}")
+    } else {
+        format!("{dir}/{name}")
     }
 }
 

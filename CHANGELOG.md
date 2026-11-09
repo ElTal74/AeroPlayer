@@ -1,5 +1,31 @@
 # Registro de cambios
 
+## 1.2.0 · Windows, Linux y macOS
+
+- **Ahora también en Linux y macOS.**
+  - Linux: paquete `tar.gz` de 64 bits con `install.sh`, que lo añade al menú de aplicaciones y a «Abrir con».
+  - macOS: `AeroPlayer.app` en un DMG, para Mac con Apple Silicon y macOS 14 o posterior.
+  - Todo funciona igual salvo lo exclusivo del Explorador de Windows: iconos AERO, clic derecho y vista rápida.
+  - El núcleo en Rust también se compila para Linux y macOS.
+- **Usar AERO Player para todo.**
+  - Un botón en Ajustes › Archivos y asociaciones y una casilla al final de la instalación lo hacen predeterminado
+    para todo lo que abre: música, vídeo, fotos, PDF, documentos, comprimidos, discos y torrents.
+  - En Windows se abre su página en Aplicaciones predeterminadas para confirmarlo con un clic. Windows no deja
+    imponerlo.
+  - En Linux y macOS se aplica directamente.
+  - Ajustes muestra cuántos tipos abre ya.
+- **Inicio automático** también en Linux y macOS.
+- **«Tu equipo»** muestra procesador, memoria, discos y batería también en Linux y macOS.
+- **Listas:** las listas vacías explican cómo llenarlas, y el recuento dice «12 elementos» en lugar de un número
+  suelto.
+- **Conversor:** con la cola vacía ya no se ven una barra y unos botones que no hacían nada.
+- **Arreglado:** algunos textos salían en español en otros idiomas: los nombres de las categorías de archivos,
+  «Disponible», «Cola» y algunos botones.
+- **Arreglado:** los PDF creados desde documentos tienen el texto bien unido al copiarlo o buscar en él.
+- **Arreglado:** la ventana de progreso de comprimir o extraer no se cerraba sola si aparecía justo bajo el
+  puntero. Ahora solo espera si mueves el ratón encima, y su cuenta atrás está traducida.
+- **Web:** apartado de descargas con Windows, Linux y macOS; reconoce tu sistema.
+
 ## 1.1.0 · Actualizaciones automáticas y más detalles
 
 - **Actualizaciones desde GitHub.**

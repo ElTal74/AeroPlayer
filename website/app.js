@@ -232,25 +232,70 @@
   var release = null;
   function mb(bytes) { return (bytes / 1048576).toFixed(0) + " MB"; }
   var VERSION_WORD = { es: "Versión", en: "Version", de: "Version", it: "Versione", pt: "Versão", ru: "Версия", zh: "版本" };
-  var PLATFORM = { es: "Windows 10 y 11 · 64 bits", en: "Windows 10 and 11 · 64-bit", de: "Windows 10 und 11 · 64 Bit",
-                   it: "Windows 10 e 11 · 64 bit", pt: "Windows 10 e 11 · 64 bits", ru: "Windows 10 и 11 · 64 бит", zh: "Windows 10 和 11 · 64 位" };
   var SOON = { es: "Próximamente en GitHub Releases", en: "Coming soon on GitHub Releases", de: "Bald auf GitHub Releases",
                it: "Presto su GitHub Releases", pt: "Em breve no GitHub Releases", ru: "Скоро на GitHub Releases", zh: "即将在 GitHub Releases 发布" };
+  // Botón principal: «Descargar para <tu sistema>»
+  var HERO = {
+    win:   { es: "Descargar para Windows", en: "Download for Windows", de: "Für Windows herunterladen", it: "Scarica per Windows", pt: "Baixar para Windows", ru: "Скачать для Windows", zh: "下载 Windows 版" },
+    linux: { es: "Descargar para Linux", en: "Download for Linux", de: "Für Linux herunterladen", it: "Scarica per Linux", pt: "Baixar para Linux", ru: "Скачать для Linux", zh: "下载 Linux 版" },
+    mac:   { es: "Descargar para macOS", en: "Download for macOS", de: "Für macOS herunterladen", it: "Scarica per macOS", pt: "Baixar para macOS", ru: "Скачать для macOS", zh: "下载 macOS 版" }
+  };
+  var OS_LINE = { win: "Windows 10 · 11", linux: "Linux · 64 bits", mac: "macOS 14+ · Apple Silicon" };
+  var PATTERNS = { setup: /setup\.exe$/i, portable: /portable\.zip$/i, linux: /linux.*\.tar\.gz$/i, mac: /macos.*\.dmg$/i };
+  var OS_MAIN = { win: "setup", linux: "linux", mac: "mac" };
+
+  // ------------------------------------------------------------ pestañas Windows / Linux / macOS
+  function detectOS() {
+    var ua = navigator.userAgent || "", plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+    if (/iPhone|iPad|Android/i.test(ua)) return "win";
+    if (/Mac/i.test(plat) || /Mac OS X/i.test(ua)) return "mac";
+    if (/Linux|X11/i.test(plat + " " + ua)) return "linux";
+    return "win";
+  }
+  var os = detectOS();
+  function selectOS(name, focus) {
+    os = name;
+    $$(".os-tab").forEach(function (b) {
+      var on = b.dataset.os === name;
+      b.setAttribute("aria-selected", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+      if (on && focus) b.focus();
+    });
+    $$("[data-os-pane]").forEach(function (p) {
+      var on = p.dataset.osPane === name;
+      p.hidden = !on;
+      if (on) { p.classList.remove("pane-in"); void p.offsetWidth; p.classList.add("pane-in"); }
+    });
+    renderRelease();                 // el botón principal sigue al sistema elegido
+  }
+  $$(".os-tab").forEach(function (b, i, all) {
+    b.addEventListener("click", function () { selectOS(b.dataset.os); });
+    b.addEventListener("keydown", function (e) {
+      var d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { e.preventDefault(); selectOS(all[(i + d + all.length) % all.length].dataset.os, true); }
+    });
+  });
+  selectOS(os);
+
   function renderRelease() {
     var v = release ? release.tag_name.replace(/^v/, "") : cfg.version;
-    $$("[data-version-line]").forEach(function (el) { el.textContent = (VERSION_WORD[lang] || "Version") + " " + v + " · " + (PLATFORM[lang] || PLATFORM.en); });
-    var assets = { setup: null, portable: null };
+    $$("[data-version-line]").forEach(function (el) { el.textContent = (VERSION_WORD[lang] || "Version") + " " + v + " · " + OS_LINE[os]; });
+    $$('[data-i18n="hero.download"]').forEach(function (el) { el.textContent = HERO[os][lang] || HERO[os].en; });
+    var assets = {};
     if (release) {
       release.assets.forEach(function (a) {
-        if (/setup\.exe$/i.test(a.name)) assets.setup = a;
-        else if (/portable\.zip$/i.test(a.name)) assets.portable = a;
+        Object.keys(PATTERNS).forEach(function (k) { if (PATTERNS[k].test(a.name)) assets[k] = a; });
       });
     }
-    ["setup", "portable"].forEach(function (k) {
-      var a = assets[k], fallback = configured ? repoUrl + "/releases/latest" : "#descargar";
+    var fallback = configured ? repoUrl + "/releases/latest" : "#descargar";
+    Object.keys(PATTERNS).forEach(function (k) {
+      var a = assets[k];
       $$('[data-download="' + k + '"]').forEach(function (el) { el.href = a ? a.browser_download_url : fallback; });
       $$('[data-size="' + k + '"]').forEach(function (el) { el.textContent = a ? a.name + " · " + mb(a.size) : (SOON[lang] || SOON.en); });
     });
+    // el botón principal lleva a la descarga de tu sistema (o a la sección si aún no está publicada)
+    var main = assets[OS_MAIN[os]];
+    $$('[data-download="hero"]').forEach(function (el) { el.href = main ? main.browser_download_url : "#descargar"; });
   }
   if (configured && window.fetch) {
     fetch("https://api.github.com/repos/" + cfg.owner + "/" + cfg.repo + "/releases/latest", { cache: "no-store" })

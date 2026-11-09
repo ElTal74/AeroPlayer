@@ -194,6 +194,33 @@ def pdf_to_images(src: Path, dst: Path, opts: ConvertOptions, progress: Progress
 
 
 def pdf_to_text(src: Path, dst: Path, opts, progress: Progress, cancelled: Cancelled) -> list[Path]:
+    # pypdfium2 une bien las letras de una misma línea aunque el PDF las coloque una a una (pasa con PDF
+    # generados en Linux); QtPdf queda de reserva.
+    try:
+        import pypdfium2 as pdfium
+    except ImportError:
+        pdfium = None
+    if pdfium is not None:
+        try:
+            pdf = pdfium.PdfDocument(str(src))
+        except pdfium.PdfiumError as e:
+            raise ValueError("No se pudo abrir el PDF.") from e
+        try:
+            parts = []
+            n = len(pdf)
+            for i in range(n):
+                if cancelled():
+                    raise ConversionCancelled()
+                page = pdf[i]
+                tp = page.get_textpage()
+                parts.append(tp.get_text_range().replace("\r\n", "\n"))
+                tp.close()
+                page.close()
+                progress((i + 1) / n)
+        finally:
+            pdf.close()
+        dst.write_text("\n\n\f".join(parts), encoding="utf-8")
+        return [dst]
     from PySide6.QtPdf import QPdfDocument
 
     doc = QPdfDocument()
@@ -330,13 +357,19 @@ def slides_text(src: Path) -> str:
 
 def html_to_pdf(html_text: str, dst: Path) -> None:
     from PySide6.QtCore import QMarginsF
-    from PySide6.QtGui import QPageLayout, QPageSize, QPdfWriter, QTextDocument
+    from PySide6.QtGui import QFont, QPageLayout, QPageSize, QPdfWriter, QTextDocument
 
     writer = QPdfWriter(str(dst))
     writer.setPageLayout(QPageLayout(QPageSize(QPageSize.PageSizeId.A4), QPageLayout.Orientation.Portrait,
                                      QMarginsF(18, 18, 18, 18), QPageLayout.Unit.Millimeter))
-    writer.setResolution(120)
+    writer.setResolution(1200)       # con 120 las letras se colocaban a saltos y el texto se copiaba troceado
     doc = QTextDocument()
+    # Métricas de diseño y sin «hinting»: con las de pantalla (FreeType en Linux) las palabras salían troceadas
+    # en el PDF y al copiar el texto aparecían letras sueltas.
+    doc.setUseDesignMetrics(True)
+    font = doc.defaultFont()
+    font.setHintingPreference(QFont.HintingPreference.PreferNoHinting)
+    doc.setDefaultFont(font)
     doc.setHtml(html_text)
     doc.print_(writer)
 

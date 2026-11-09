@@ -413,7 +413,7 @@ assert v.stack.currentWidget() is v.image, "la foto no se abrió"
 v.open(sys.argv[2])
 app.processEvents()
 assert v.stack.currentWidget() is v.error and "PDF" in v.error_text.text(), v.error_text.text()
-print("ok")
+print("ok", flush=True)          # os._exit no vacía la salida
 os._exit(0)
 '''
 

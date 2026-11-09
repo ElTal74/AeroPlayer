@@ -1,0 +1,6 @@
+# macOS: los módulos de Python no se enlazan contra libpython; los símbolos los pone el intérprete al cargarlo.
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]

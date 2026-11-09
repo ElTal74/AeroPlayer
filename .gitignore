@@ -16,4 +16,5 @@ build_log.txt
 # Núcleo nativo (se compila con packaging/build.ps1 o tools/build_native.py)
 native/aero_core/target/
 aero/aero_core.pyd
+aero/aero_core*.so
 

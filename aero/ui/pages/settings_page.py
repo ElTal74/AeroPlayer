@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 
 import unicodedata
 
@@ -207,6 +208,34 @@ class SettingsPage(QWidget):
         add("library", p)
 
         # ------------------------------------------------------------ archivos y asociaciones
+        # Registro, iconos del Explorador y vista rápida son de Windows: en Linux y macOS esas secciones se crean
+        # (el resto del código las usa) pero no se muestran, y en su lugar se explica cómo se integra allí.
+        self._hidden_sections: list = []
+
+        def windows_only(section_widget):
+            if os.name == "nt":
+                add("files", section_widget)
+            else:
+                section_widget.hide()
+                self._hidden_sections.append(section_widget)
+
+        p, lay = section(tr("Usar AERO Player para todo"))
+        if os.name == "nt":
+            how = tr("Música, vídeo, fotos, PDF, documentos, comprimidos, discos y torrents se abrirán con AERO Player. "
+                     "Windows te mostrará la página de AERO Player: pulsa «Establecer predeterminada» una vez y "
+                     "listo (Windows exige que lo confirmes tú).")
+        else:
+            how = tr("Música, vídeo, fotos, PDF, documentos, comprimidos, discos y torrents se abrirán con "
+                     "AERO Player.")
+        lay.addWidget(label(how, "caption", wrap=True))
+        self.btn_default_all = QPushButton(tr("Usar AERO Player para todos mis archivos"))
+        self.btn_default_all.setProperty("kind", "primary")
+        self.btn_default_all.setMinimumHeight(34)
+        self.btn_default_all.clicked.connect(self._make_default_all)
+        self.default_state = label("", "caption")
+        lay.addLayout(h_layout(self.btn_default_all, 12, self.default_state, None))
+        add("files", p)
+
         p, lay = section(tr("Aplicaciones predeterminadas"))
         self.assoc_grid = QGridLayout()
         self.assoc_grid.setHorizontalSpacing(18)
@@ -225,7 +254,19 @@ class SettingsPage(QWidget):
         self.btn_refresh.setProperty("kind", "flat")
         self.btn_refresh.clicked.connect(self._refresh_assoc)
         lay.addLayout(h_layout(self.btn_register, self.btn_settings, None, self.btn_refresh, self.btn_unregister))
-        add("files", p)
+        windows_only(p)
+        if os.name != "nt":
+            p, lay = section(tr("Integración con el sistema"))
+            if sys.platform == "darwin":
+                text = tr("AERO Player aparece en «Abrir con» del Finder para música, vídeo, fotos, documentos y "
+                          "comprimidos. Para usarlo siempre con un tipo: Obtener información › Abrir con › "
+                          "Cambiar todo.")
+            else:
+                text = tr("Ejecuta «install.sh» (incluido en la descarga) para añadir AERO Player al menú de "
+                          "aplicaciones y a «Abrir con». Para usarlo siempre con un tipo, elígelo en las "
+                          "propiedades del archivo de tu gestor de archivos.")
+            lay.addWidget(label(text, "caption", wrap=True))
+            add("files", p)
 
         p, lay = section(tr("Iconos AERO en el Explorador"))
         lay.addWidget(label(tr("Los tipos que abre AERO Player llevan el icono AERO de su categoría (vídeo, audio, "
@@ -241,7 +282,7 @@ class SettingsPage(QWidget):
         self.btn_icons_restore.clicked.connect(self._restore_icons)
         lay.addWidget(self.icons_foreign)
         lay.addLayout(h_layout(self.icons_state, None, self.btn_icons_restore))
-        add("files", p)
+        windows_only(p)
 
         p, lay = section(tr("Fotos"))
         lay.addWidget(self._check("photos_in_main", tr("Abrir las fotos en la ventana principal de AERO Player")))
@@ -265,7 +306,7 @@ class SettingsPage(QWidget):
         lay.addWidget(self.ql)
         lay.addWidget(self.ql_space)
         lay.addLayout(h_layout(label(tr("Atajo de la vista rápida"), "muted"), self.ql_key, None, spacing=10))
-        add("files", p)
+        windows_only(p)
 
         # ------------------------------------------------------------ conversión
         p, lay = section(tr("Conversión"))
@@ -522,19 +563,23 @@ class SettingsPage(QWidget):
         st = associations.status()
         for i, cat in enumerate(associations.CATEGORIES):
             mine, total = st[cat.key]
-            name = label(cat.label)
+            name = label(tr(cat.label))
             exts = label(" ".join(e.lstrip(".") for e in cat.exts), "caption")
             exts.setWordWrap(True)
             if mine:
                 state = tr("Predeterminado") if mine == total else tr("Predeterminado en {n}/{total}", n=mine,
                                                                        total=total)
             else:
-                state = "Disponible" if registered else "Sin registrar"
+                state = tr("Disponible") if registered else tr("Sin registrar")
             badge = label(state, "accent" if mine else "muted")
             self.assoc_grid.addWidget(name, i, 0)
             self.assoc_grid.addWidget(exts, i, 1)
             self.assoc_grid.addWidget(badge, i, 2, Qt.AlignmentFlag.AlignRight)
         self.assoc_grid.setColumnStretch(1, 1)
+        mine = sum(m for m, _t in st.values())
+        total = sum(t for _m, t in st.values())
+        self.default_state.setText(tr("AERO Player ya abre todos sus tipos de archivo.") if mine == total else
+                                   tr("AERO Player abre {n} de {total} tipos de archivo.", n=mine, total=total))
         self.btn_register.setText(tr("Volver a registrar") if registered else tr("Registrar AERO Player"))
         self.btn_unregister.setVisible(registered)
 
@@ -547,6 +592,21 @@ class SettingsPage(QWidget):
         self._refresh_assoc()
         self.message.emit(tr("Registrado. Elige AERO Player en la Configuración de Windows."), "ok")
         associations.open_default_apps_settings()
+
+    def _make_default_all(self):
+        from aero.core import defaults
+
+        result = defaults.make_default_everywhere()
+        if result == defaults.SETTINGS:
+            self._refresh_assoc()
+            self.message.emit(tr("En la página que se ha abierto, pulsa «Establecer predeterminada»."), "info")
+        elif result == defaults.DONE:
+            self.message.emit(tr("Listo: tus archivos se abrirán con AERO Player."), "ok")
+        elif sys.platform == "darwin":
+            self.message.emit(tr("En el Finder: Obtener información › Abrir con › AERO Player › Cambiar todo."), "info")
+        else:
+            self.message.emit(tr("No se pudo cambiar automáticamente. Elige AERO Player en «Abrir con» de tu gestor "
+                                 "de archivos."), "error")
 
     def _check_updates_now(self):
         from aero.ui.update_ui import check_in_background, show_update

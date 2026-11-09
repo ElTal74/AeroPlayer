@@ -20,6 +20,7 @@ import ctypes
 import os
 import platform
 import string
+import sys
 import time
 from ctypes import wintypes
 from dataclasses import dataclass, field
@@ -141,6 +142,8 @@ def _unique(names: list[str]) -> list[str]:
 def static_info() -> StaticInfo:
     """Datos que no cambian mientras la aplicación está abierta (tarda ~0,1 s: llamar en un hilo)."""
     info = StaticInfo()
+    if not _IS_WIN:
+        return _unix_static(info)
     cpu = _reg(r"HARDWARE\DESCRIPTION\System\CentralProcessor\0", "ProcessorNameString")
     if cpu:
         info.cpu_model = " ".join(str(cpu).split())
@@ -173,6 +176,45 @@ def static_info() -> StaticInfo:
     return info
 
 
+def _unix_static(info: StaticInfo) -> StaticInfo:
+    """Linux y macOS: procesador, sistema y memoria (sin procesos externos)."""
+    from aero.core.hardware import _cpu_name
+
+    info.cpu_model = _cpu_name()
+    info.cpu_threads = os.cpu_count() or 0
+    try:
+        import psutil
+
+        info.cpu_cores = psutil.cpu_count(logical=False) or info.cpu_threads
+    except ImportError:
+        info.cpu_cores = info.cpu_threads
+    if sys.platform == "darwin":
+        info.os_name = f"macOS {platform.mac_ver()[0]}".strip()
+        info.os_build = f"Darwin {platform.release()}"
+    else:
+        info.os_name = _os_release().get("PRETTY_NAME") or "Linux"
+        info.os_build = f"Linux {platform.release()}"
+    info.arch = {"x86_64": "64 bits (x64)", "amd64": "64 bits (x64)", "arm64": "64 bits (ARM)",
+                 "aarch64": "64 bits (ARM)"}.get(platform.machine().lower(), platform.machine())
+    info.ram_total = memory()[0]
+    return info
+
+
+def _os_release() -> dict[str, str]:
+    out: dict[str, str] = {}
+    for f in ("/etc/os-release", "/usr/lib/os-release"):
+        try:
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                for line in fh:
+                    k, sep, v = line.strip().partition("=")
+                    if sep:
+                        out[k] = v.strip().strip('"')
+            return out
+        except OSError:
+            continue
+    return out
+
+
 # ---------------------------------------------------------------------------------------------- datos vivos
 class _FT(ctypes.Structure):
     _fields_ = [("lo", wintypes.DWORD), ("hi", wintypes.DWORD)]
@@ -190,7 +232,14 @@ class CpuMeter:
     @staticmethod
     def _times() -> tuple[int, int, int]:
         if not _IS_WIN:
-            return 0, 0, 0
+            try:
+                import psutil
+
+                ct = psutil.cpu_times()
+                # como en Windows: (ocioso, «núcleo» que incluye el ocioso, usuario)
+                return int(ct.idle * 1000), int(sum(ct) * 1000), 0
+            except (ImportError, OSError):
+                return 0, 0, 0
         idle, kern, user = _FT(), _FT(), _FT()
         ctypes.windll.kernel32.GetSystemTimes(ctypes.byref(idle), ctypes.byref(kern), ctypes.byref(user))
         return idle.value(), kern.value(), user.value()
@@ -215,7 +264,9 @@ class _MEMSTAT(ctypes.Structure):
 def memory() -> tuple[int, int]:
     """(total, disponible) en bytes."""
     if not _IS_WIN:
-        return 0, 0
+        from aero.core.hardware import memory as unix_memory
+
+        return unix_memory()
     m = _MEMSTAT()
     m.dwLength = ctypes.sizeof(m)
     ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(m))
@@ -233,7 +284,7 @@ class Disk:
 def disks() -> list[Disk]:
     out: list[Disk] = []
     if not _IS_WIN:
-        return out
+        return _unix_disks()
     k32 = ctypes.windll.kernel32
     mask = k32.GetLogicalDrives()
     for i, letter in enumerate(string.ascii_uppercase):
@@ -248,6 +299,31 @@ def disks() -> list[Disk]:
         name = ctypes.create_unicode_buffer(261)
         k32.GetVolumeInformationW(root, name, 261, None, None, None, None, 0)
         out.append(Disk(root, name.value or "Disco local", int(total.value), int(free.value)))
+    return out
+
+
+def _unix_disks() -> list[Disk]:
+    """Volúmenes reales montados (sin los del sistema, snaps ni imágenes de solo lectura)."""
+    try:
+        import psutil
+    except ImportError:
+        return []
+    out: list[Disk] = []
+    skip_fs = {"squashfs", "tmpfs", "devtmpfs", "overlay", "iso9660", "udf", "autofs"}
+    for part in psutil.disk_partitions(all=False):
+        mp = part.mountpoint
+        if part.fstype.lower() in skip_fs or mp.startswith(("/snap", "/boot", "/sys", "/proc", "/run/snapd")):
+            continue
+        if sys.platform == "darwin" and not (mp == "/" or mp.startswith("/Volumes/")):
+            continue
+        try:
+            u = psutil.disk_usage(mp)
+        except OSError:
+            continue
+        if u.total < 1 << 30:                       # menos de 1 GB: particiones auxiliares
+            continue
+        out.append(Disk(mp, "Disco del sistema" if mp == "/" else os.path.basename(mp.rstrip("/")) or mp,
+                        int(u.total), int(u.free)))
     return out
 
 
@@ -267,7 +343,16 @@ class Battery:
 def battery() -> Battery | None:
     """None si el equipo no tiene batería."""
     if not _IS_WIN:
-        return None
+        try:
+            import psutil
+
+            b = psutil.sensors_battery()
+        except (ImportError, OSError, AttributeError):
+            return None
+        if b is None:
+            return None
+        left = b.secsleft if isinstance(b.secsleft, int) and b.secsleft >= 0 else None
+        return Battery(int(round(b.percent)), bool(b.power_plugged), left)
     p = _POWER()
     if not ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(p)):
         return None

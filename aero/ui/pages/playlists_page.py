@@ -13,9 +13,47 @@ from PySide6.QtWidgets import (QAbstractItemView, QFileDialog, QInputDialog, QLi
 from aero.core import tools
 from aero.core.formats import is_media
 from aero.ui.glass import GlassPanel, IconButton, h_layout, label, tm
-from aero.i18n import tr
+from aero.i18n import ntr, tr
 
 FAV, HISTORY = -1, -2
+
+
+class _ItemList(QListWidget):
+    """Lista de la derecha: vacía, explica cómo llenarla en lugar de quedarse en blanco."""
+
+    def __init__(self):
+        super().__init__()
+        self.empty = ("", "", "")         # icono, título, explicación
+
+    def paintEvent(self, e):
+        super().paintEvent(e)
+        icon_name, title, text = self.empty
+        if self.count() or not title:
+            return
+        from PySide6.QtGui import QColor, QPainter
+
+        from aero.ui import icons
+
+        th = tm().theme
+        p = QPainter(self.viewport())
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = self.viewport().rect()
+        p.setOpacity(0.85)
+        p.drawPixmap(r.center().x() - 22, r.center().y() - 70, icons.pixmap(icon_name, th.accent, 44))
+        p.setOpacity(1.0)
+        f = p.font()
+        f.setPointSizeF(f.pointSizeF() + 1.5)
+        f.setBold(True)
+        p.setFont(f)
+        p.setPen(QColor(th.text))
+        p.drawText(r.adjusted(24, 0, -24, -10), Qt.AlignmentFlag.AlignCenter, title)
+        f.setBold(False)
+        f.setPointSizeF(f.pointSizeF() - 2)
+        p.setFont(f)
+        p.setPen(QColor(th.text2))
+        p.drawText(r.adjusted(40, r.height() // 2 + 18, -40, 0),
+                   Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop | Qt.TextFlag.TextWordWrap, text)
+        p.end()
 
 
 def read_m3u(path: str) -> list[str]:
@@ -72,15 +110,15 @@ class PlaylistsPage(QWidget):
         right = GlassPanel(radius=22)
         self.title = label("", "h2")
         self.count = label("", "caption")
-        self.items = QListWidget()
+        self.items = _ItemList()
         self.items.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.items.itemDoubleClicked.connect(lambda it: self._play(self.items.row(it)))
         self.items.model().rowsMoved.connect(lambda *_: self._save_order())
         self.items.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.items.customContextMenuRequested.connect(self._menu)
-        play = IconButton("play", "Reproducir", 18)
+        play = IconButton("play", tr("Reproducir"), 18)
         play.clicked.connect(lambda: self._play(0))
-        shuf = IconButton("shuffle", "Aleatorio", 18)
+        shuf = IconButton("shuffle", tr("Aleatorio"), 18)
         shuf.clicked.connect(lambda: self._play(0, True))
         self.export_btn = IconButton("external", tr("Exportar M3U8"), 18)
         self.export_btn.clicked.connect(self._export)
@@ -147,7 +185,17 @@ class PlaylistsPage(QWidget):
         self.items.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove if user
                                    else QAbstractItemView.DragDropMode.NoDragDrop)
         self.remove_btn.setVisible(pid != HISTORY)
-        self.count.setText(f"{len(paths)}")
+        self.count.setText(ntr("{n} elemento", "{n} elementos", len(paths)))
+        if pid == FAV:
+            self.items.empty = ("heart", tr("Aún no tienes favoritos"),
+                                tr("Pulsa el corazón de la barra del reproductor y la canción o el vídeo aparecerá aquí."))
+        elif pid == HISTORY:
+            self.items.empty = ("clock", tr("El historial está vacío"),
+                                tr("Aquí aparecerá lo que reproduzcas, para volver a ello cuando quieras."))
+        else:
+            self.items.empty = ("list_add", tr("Esta lista está vacía"),
+                                tr("En la biblioteca, clic derecho › «Añadir a una lista…» para llenarla."))
+        self.items.viewport().update()
         self.items.setToolTip(tr("Arrastra para reordenar") if user else "")
 
     def _play(self, start: int, shuffle: bool = False):

@@ -288,6 +288,9 @@ class ProgressWindow(GlassWindow):
         self.open_btn.show()
         self.detail.setText(tr("Hecho en {v0}", v0=_eta(time.monotonic() - self._t0)))
         self._hover = False  # solo cuenta si el usuario pone el ratón encima después de terminar
+        from PySide6.QtGui import QCursor
+
+        self._cursor_at_end = QCursor.pos()   # si la ventana aparece bajo el puntero quieto, no es «pasar por encima»
         if auto_close:
             # Se cierra sola a los pocos segundos; con el ratón encima la cuenta se pausa (para abrir la
             # carpeta) y sigue al apartarlo.
@@ -297,7 +300,8 @@ class ProgressWindow(GlassWindow):
 
     def _update_countdown(self):
         base = self.detail.text().split("  ·  ")[0]
-        extra = "  ·  se cerrará al apartar el ratón" if self._hover else f"  ·  se cierra en {self._countdown} s"
+        extra = ("  ·  " + tr("se cerrará al apartar el ratón") if self._hover else
+                 "  ·  " + tr("se cierra en {n} s", n=self._countdown))
         self.detail.setText(base + extra)
 
     def _tick_close(self):
@@ -311,6 +315,11 @@ class ProgressWindow(GlassWindow):
             self._update_countdown()
 
     def enterEvent(self, e):
+        from PySide6.QtGui import QCursor
+
+        if self._close_timer.isActive() and QCursor.pos() == getattr(self, "_cursor_at_end", None):
+            super().enterEvent(e)              # la ventana apareció bajo el puntero: el usuario no lo ha movido
+            return
         self._hover = True
         if self._close_timer.isActive():
             self._update_countdown()

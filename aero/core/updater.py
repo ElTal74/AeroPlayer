@@ -154,7 +154,7 @@ def expected_sha256(rel: Release) -> str:
     if text is None:
         raise UpdateError(f"No se pudo descargar la suma SHA-256: {error}") from error
     for line in text.splitlines():
-        parts = line.strip().split()
+        parts = line.strip().lstrip("﻿").split()         # BOM también a mitad (sumas de varios sistemas)
         if len(parts) >= 2 and parts[-1].lstrip("*") == rel.setup_name and re.fullmatch(r"[0-9a-fA-F]{64}", parts[0]):
             return parts[0].lower()
     raise UpdateError("La versión no publica la suma SHA-256 del instalador.")

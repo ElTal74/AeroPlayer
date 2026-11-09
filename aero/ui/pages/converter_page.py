@@ -288,16 +288,17 @@ class ConverterPage(QWidget):
         self.overall = QProgressBar()
         self.overall.setRange(0, 1000)
         self.overall_label = label("", "muted")
-        clear_done = IconButton("check", tr("Limpiar terminados"), 16)
+        self.clear_done = clear_done = IconButton("check", tr("Limpiar terminados"), 16)
         clear_done.clicked.connect(manager.clear_finished)
-        cancel_all = IconButton("close", tr("Cancelar todo"), 16)
+        self.cancel_all = cancel_all = IconButton("close", tr("Cancelar todo"), 16)
         cancel_all.clicked.connect(manager.cancel_all)
         rl = QVBoxLayout(right)
         rl.setContentsMargins(20, 18, 20, 18)
-        rl.addLayout(h_layout(label("Cola", "h2"), None, clear_done, cancel_all))
+        rl.addLayout(h_layout(label(tr("Cola"), "h2"), None, clear_done, cancel_all))
         rl.addLayout(h_layout(self.overall_label, None))
         rl.addWidget(self.overall)
         rl.addWidget(self.table, 1)
+        self._sync_overall()
 
         lay = h_layout(left, right, spacing=12)
         lay.setStretch(0, 5)
@@ -542,14 +543,12 @@ class ConverterPage(QWidget):
         active = job.state in ACTIVE or job.state == "En cola"
         pause.setVisible(job.state in ("Convirtiendo", "En pausa") and self.manager.can_pause(jid))
         pause.set_icon_name("play" if job.state == PAUSED else "pause_small")
-        pause.setToolTip("Reanudar" if job.state == PAUSED else "Pausar")
+        pause.setToolTip(tr("Reanudar") if job.state == PAUSED else tr("Pausar"))
         cancel.setVisible(active)
         retry.setVisible(job.state in (ERROR, CANCELLED))
         open_btn.setVisible(job.state == DONE)
         remove.setVisible(not active)
-        done, total, prog = self.manager.overall()
-        self.overall.setValue(int(prog * 1000))
-        self.overall_label.setText(f"{done}/{total} · {prog * 100:.0f} %" if total else "")
+        self._sync_overall()
 
     def _job_removed(self, jid: int):
         r = self.rows.pop(jid, None)
@@ -559,6 +558,12 @@ class ConverterPage(QWidget):
         for k, v in self.rows.items():
             if v > r:
                 self.rows[k] = v - 1
+        self._sync_overall()
+
+    def _sync_overall(self):
+        """Avance total; con la cola vacía no se muestran la barra ni los botones (no harían nada)."""
         done, total, prog = self.manager.overall()
         self.overall.setValue(int(prog * 1000))
-        self.overall_label.setText(f"{done}/{total}" if total else "")
+        self.overall_label.setText(f"{done}/{total} · {prog * 100:.0f} %" if total else "")
+        for w in (self.overall, self.overall_label, self.clear_done, self.cancel_all):
+            w.setVisible(bool(total))

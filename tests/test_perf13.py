@@ -127,7 +127,10 @@ def test_task_queue_limits_priority_and_cancel(qapp):
     assert wait_until(qapp, lambda: len(order) == 7)
     assert state["peak"] <= 2, "nunca más tareas a la vez que el límite"
     assert 3 not in order, "las tareas canceladas en cola no se ejecutan"
-    assert sorted(started[:2]) == [0, 1] and started[2:] == [7, 6, 5, 4, 2], "lo último pedido va primero"
+    # Con 2 trabajadores, las dos tareas que arrancan a la vez pueden anotarse en cualquier orden: se mira por parejas
+    assert sorted(started[:2]) == [0, 1], started
+    assert set(started[2:4]) == {7, 6} and set(started[4:6]) == {5, 4} and started[6:] == [2], \
+        ("lo último pedido va primero", started)
     tq.set_foreground_busy(True)
     assert tq.limit("background") == 1
     tq.set_foreground_busy(False)

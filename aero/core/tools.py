@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -108,12 +109,17 @@ def reveal_in_explorer(path: str) -> None:
             subprocess.Popen(["explorer", "/select,", str(p)], creationflags=CREATE_NO_WINDOW)
         else:
             os.startfile(str(p if p.exists() else p.parent))  # noqa: S606 - ruta validada
-    else:  # pragma: no cover
+    elif sys.platform == "darwin":  # pragma: no cover - macOS
+        subprocess.Popen(["open", "-R", str(p)] if p.exists() else ["open", str(p.parent)])
+    else:  # pragma: no cover - Linux
         subprocess.Popen(["xdg-open", str(p.parent if p.is_file() else p)])
 
 
 def open_with_default(path: str) -> None:
+    """Abre un archivo o una dirección con el programa predeterminado del sistema."""
     if os.name == "nt":
         os.startfile(path)  # noqa: S606
-    else:  # pragma: no cover
+    elif sys.platform == "darwin":  # pragma: no cover - macOS
+        subprocess.Popen(["open", path])
+    else:  # pragma: no cover - Linux
         subprocess.Popen(["xdg-open", path])

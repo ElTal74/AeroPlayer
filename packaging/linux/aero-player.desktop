@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=AERO Player
+GenericName=Media player and viewer
+GenericName[es]=Reproductor y visor multimedia
+Comment=Music, videos, photos, documents and archives with the Aero look
+Comment[es]=Música, vídeos, fotos, documentos y comprimidos con el estilo Aero
+Exec=@EXEC@ %F
+Icon=aero-player
+Terminal=false
+Categories=AudioVideo;Audio;Video;Player;Graphics;Viewer;Office;Utility;
+Keywords=music;video;player;viewer;pdf;converter;zip;
+StartupWMClass=AeroPlayer
+MimeType=audio/mpeg;audio/flac;audio/x-flac;audio/x-wav;audio/wav;audio/ogg;audio/opus;audio/mp4;audio/aac;audio/x-m4a;audio/x-ms-wma;audio/x-aiff;audio/x-matroska;video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mpeg;video/mp2t;video/x-flv;video/3gpp;video/ogg;image/jpeg;image/png;image/gif;image/webp;image/bmp;image/tiff;image/heic;image/avif;image/svg+xml;application/pdf;application/vnd.openxmlformats-officedocument.wordprocessingml.document;application/vnd.oasis.opendocument.text;application/rtf;text/markdown;text/plain;application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;application/vnd.ms-excel;application/vnd.oasis.opendocument.spreadsheet;text/csv;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/zip;application/vnd.rar;application/x-rar;application/x-7z-compressed;application/x-tar;application/gzip;application/x-compressed-tar;application/x-iso9660-image;application/x-cd-image;application/x-bittorrent;

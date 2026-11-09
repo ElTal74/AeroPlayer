@@ -427,7 +427,7 @@ class WidgetCard(QWidget):
         t = tm().theme
         disks = self.svc.disks
         if not disks:
-            self._lines(p, rect, [("…" if self.svc.static is None else "No disponible", "muted")])
+            self._lines(p, rect, [("…" if self.svc.static is None else tr("No disponible"), "muted")])
             return
         row = max(30.0, min(40.0, rect.height() / max(1, len(disks))))
         y = rect.top()

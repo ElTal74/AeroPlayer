@@ -486,7 +486,9 @@ def export_pdf(doc: QTextDocument, path: str, header: str = "", footer: str = ""
                        Qt.AlignmentFlag.AlignVCenter, header)
         foot = footer
         if page_numbers:
-            foot = (foot + "    " if foot else "") + f"Página {i + 1} de {pages}"
+            from aero.i18n import tr
+
+            foot = (foot + "    " if foot else "") + tr("Página {n} de {total}", n=i + 1, total=pages)
         if foot:
             p.drawText(QRectF(margin, body.bottom() + 6, body.width(), band), Qt.AlignmentFlag.AlignHCenter |
                        Qt.AlignmentFlag.AlignVCenter, foot)

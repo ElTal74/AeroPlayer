@@ -92,7 +92,9 @@ def test_compress_and_extract_actions(controller, qapp, tmp_path, monkeypatch):
         (src / n).write_text(n * 100, encoding="utf-8")
     controller._do_action("compress_7z", [str(src)])
     out = tmp_path / "Carpeta ñ.7z"
-    assert _wait(qapp, lambda: out.exists() and not any(isinstance(w, ui.ProgressWindow) for w in controller.editors))
+    assert _wait(qapp, lambda: out.exists() and not any(isinstance(w, ui.ProgressWindow) for w in controller.editors),
+                 60), (out.exists(), [(type(w).__name__, getattr(getattr(w, "status", None), "text", lambda: "")())
+                                      for w in controller.editors])
     controller._do_action("extract_folder", [str(out)])
     dest = tmp_path / "Carpeta ñ (2)"  # la carpeta original existe y no está vacía: no se mezcla
     assert _wait(qapp, lambda: (dest / "Carpeta ñ" / "b 😀.txt").exists())

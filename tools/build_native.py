@@ -1,8 +1,10 @@
-"""Compila el núcleo nativo en Rust (native/aero_core) y lo deja como `aero/aero_core.pyd`.
+"""Compila el núcleo nativo en Rust (native/aero_core) y lo deja junto al paquete `aero`.
+
+* Windows: `aero/aero_core.pyd` (Rust + Microsoft C++ Build Tools).
+* Linux y macOS: `aero/aero_core.abi3.so` (Rust + el compilador de C del sistema).
 
 Uso: python tools/build_native.py [--debug]
-Necesita Rust (rustup, toolchain «stable-x86_64-pc-windows-msvc») y las Microsoft C++ Build Tools.
-Sin ellos, AERO Player funciona igual con la versión Python (aero/core/native.py).
+Sin Rust, AERO Player funciona igual con la versión Python (aero/core/native.py).
 """
 
 from __future__ import annotations
@@ -21,7 +23,7 @@ def cargo() -> str | None:
     found = shutil.which("cargo")
     if found:
         return found
-    home = Path(os.environ.get("CARGO_HOME", Path.home() / ".cargo")) / "bin" / "cargo.exe"
+    home = Path(os.environ.get("CARGO_HOME", Path.home() / ".cargo")) / "bin" / ("cargo.exe" if os.name == "nt" else "cargo")
     return str(home) if home.exists() else None
 
 
@@ -34,8 +36,13 @@ def build(debug: bool = False) -> Path:
     r = subprocess.run(cmd, cwd=CRATE, env=env)
     if r.returncode:
         raise SystemExit(r.returncode)
-    dll = CRATE / "target" / ("debug" if debug else "release") / "aero_core.dll"
-    out = ROOT / "aero" / "aero_core.pyd"
+    target = CRATE / "target" / ("debug" if debug else "release")
+    if os.name == "nt":
+        dll, out = target / "aero_core.dll", ROOT / "aero" / "aero_core.pyd"
+    elif sys.platform == "darwin":
+        dll, out = target / "libaero_core.dylib", ROOT / "aero" / "aero_core.abi3.so"
+    else:
+        dll, out = target / "libaero_core.so", ROOT / "aero" / "aero_core.abi3.so"
     shutil.copy2(dll, out)
     print(f"Núcleo nativo listo: {out} ({out.stat().st_size // 1024} KB)")
     return out

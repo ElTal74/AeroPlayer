@@ -415,6 +415,12 @@ class InstallerWindow(GlassWindow):
         self.done_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cb_launch = QCheckBox(tr("Abrir AERO Player ahora"))
         self.cb_launch.setChecked(True)
+        # Windows exige que el usuario confirme los predeterminados: se abre la página de AERO Player en
+        # Aplicaciones predeterminadas, donde un botón lo aplica a todos sus tipos.
+        self.cb_default = QCheckBox(tr("Usar AERO Player para todos mis archivos"))
+        self.cb_default.setToolTip(tr("Al finalizar se abrirá la página de AERO Player en Aplicaciones "
+                                      "predeterminadas: pulsa «Establecer predeterminada»."))
+        self.cb_default.setChecked(self.existing is None)
         self.finish = QPushButton(tr("Finalizar"))
         self.finish.setProperty("kind", "primary")
         self.finish.setMinimumSize(160, 40)
@@ -432,6 +438,7 @@ class InstallerWindow(GlassWindow):
         v.addWidget(self.done_text)
         v.addSpacing(8)
         v.addWidget(self.cb_launch, 0, Qt.AlignmentFlag.AlignHCenter)
+        v.addWidget(self.cb_default, 0, Qt.AlignmentFlag.AlignHCenter)
         v.addSpacing(8)
         v.addLayout(h_layout(None, self.retry, self.finish, None, spacing=10))
         v.addStretch(1)
@@ -536,6 +543,7 @@ class InstallerWindow(GlassWindow):
         self.done_text.setText(tr("La primera vez que lo abras te enseñará sus funciones con un tutorial breve "
                                   "(puedes saltarlo). Tus ajustes y bibliotecas se conservan siempre."))
         self.cb_launch.show()
+        self.cb_default.setVisible(self.opts.associations)
         self.finish.setText(tr("Finalizar"))
         self.stack.fade_to(3)
 
@@ -548,6 +556,7 @@ class InstallerWindow(GlassWindow):
         self.done_title.setText(tr("No se pudo completar la instalación"))
         self.done_text.setText(message)
         self.cb_launch.hide()
+        self.cb_default.hide()
         self.retry.show()
         self.finish.setText(tr("Cerrar"))
         self.stack.fade_to(3)
@@ -555,6 +564,10 @@ class InstallerWindow(GlassWindow):
     def _finish(self):
         if self.installed is not None and self.cb_launch.isChecked():
             core.run_app(self.installed, wait=False)
+        if self.installed is not None and self.opts.associations and self.cb_default.isChecked():
+            from aero.core import associations
+
+            associations.open_default_apps_settings()
         self.close()
 
     def closeEvent(self, e):
