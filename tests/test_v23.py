@@ -418,7 +418,7 @@ os._exit(0)
 '''
 
 
-def test_viewer_works_without_qtpdf(tmp_path):
+def test_viewer_works_without_qtpdf(qapp, tmp_path):
     """Sin QtPdf (pasó en las compilaciones de GitHub) solo fallan los PDF, con un aviso; fotos y demás, bien."""
     import subprocess
     import sys
@@ -428,7 +428,14 @@ def test_viewer_works_without_qtpdf(tmp_path):
     script = tmp_path / "sin_pdf.py"
     script.write_text(_NO_QTPDF, encoding="utf-8")
     env = {**__import__("os").environ, "PYTHONPATH": str(root), "AERO_DATA_DIR": str(tmp_path / "datos")}
-    r = subprocess.run([sys.executable, str(script), str(root / "tests" / "media" / "foto.jpg"),
-                        str(root / "tests" / "media" / "doc.pdf")], capture_output=True, text=True, timeout=120,
-                       env=env, cwd=str(root))
+    from PySide6.QtGui import QColor, QImage
+
+    img = QImage(64, 48, QImage.Format.Format_RGB32)       # archivos propios: tests/media no está en el repositorio
+    img.fill(QColor("#3a8ee6"))
+    photo = tmp_path / "foto.png"
+    assert img.save(str(photo))
+    pdf = tmp_path / "doc.pdf"
+    pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+    r = subprocess.run([sys.executable, str(script), str(photo), str(pdf)], capture_output=True, text=True,
+                       timeout=120, env=env, cwd=str(root))
     assert r.returncode == 0 and "ok" in r.stdout, r.stdout + r.stderr
