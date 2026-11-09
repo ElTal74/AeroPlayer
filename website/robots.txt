@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://eltal74.github.io/AeroPlayer/sitemap.xml

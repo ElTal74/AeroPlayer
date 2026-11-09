@@ -51,17 +51,21 @@ class PlayerEngine(QObject):
         super().__init__(parent)
         self.settings = settings
         self.db = db
-        self.player = QMediaPlayer(self)
+        # Orden importante: Qt destruye los hijos en el orden en que se crearon. Las salidas guardan un puntero al
+        # reproductor y lo usan al destruirse, así que deben crearse (y destruirse) antes que él; al revés, en
+        # Linux y macOS el programa fallaba al cerrar la ventana (puntero a un reproductor ya destruido).
         self.audio = QAudioOutput(self)
-        self.player.setAudioOutput(self.audio)
         fmt = QAudioFormat()
         fmt.setSampleRate(44100)
         fmt.setChannelCount(2)
         fmt.setSampleFormat(QAudioFormat.SampleFormat.Float)
         self.buffer_out = QAudioBufferOutput(fmt, self)
         self.buffer_out.audioBufferReceived.connect(self._on_buffer)
+        self.player = QMediaPlayer(self)
+        self.player.setAudioOutput(self.audio)
         self._analyzer = None    # se crea al primer uso: NumPy no se carga hasta que hace falta (-170 ms al abrir)
         self._analysis_on = False
+        self._output_attached = False
 
         self.queue: list[str] = []
         self.index = -1
@@ -98,9 +102,51 @@ class PlayerEngine(QObject):
         if on == self._analysis_on:
             return
         self._analysis_on = on
-        self.player.setAudioBufferOutput(self.buffer_out if on else None)
+        if on:
+            self._attach_output()
+        else:
+            self._detach_output()
         if not on and self._analyzer is not None:
             self._analyzer.reset()
+
+    # La salida de muestras (QAudioBufferOutput, creada desde Python) solo está conectada mientras hay algo que
+    # analizar y algo sonando:
+    # * Si el hilo de FFmpeg se desconecta de ella mientras el principal espera dentro de stop() o setSource(),
+    #   los dos se bloquean (uno espera el GIL y el otro un mutex de Qt): se desconecta antes, en este hilo.
+    # * Destruirla conectada al reproductor hace fallar a Qt en Linux y macOS: tras detener queda desconectada
+    #   y `dispose()` la suelta antes de cerrar.
+    def _attach_output(self) -> None:
+        if self._analysis_on and not self._output_attached:
+            self.player.setAudioBufferOutput(self.buffer_out)
+            self._output_attached = True
+
+    def _detach_output(self) -> None:
+        if self._output_attached:
+            self.player.setAudioBufferOutput(None)
+            self._output_attached = False
+
+    def _quiet_pipeline(self, action, reattach: bool = True) -> None:
+        """Detiene o cambia la fuente con la salida de muestras desconectada (ver arriba)."""
+        self._detach_output()
+        try:
+            action()
+        finally:
+            if reattach:
+                self._attach_output()
+
+    def _play(self) -> None:
+        self._attach_output()
+        self.player.play()
+
+    def dispose(self) -> None:
+        """Antes de destruir el motor: todo detenido y desconectado."""
+        self._analysis_on = False
+        self._detach_output()
+        try:
+            self.player.stop()
+            self.player.setSource(QUrl())
+        except RuntimeError:
+            pass
 
     @property
     def analyzer(self):
@@ -171,7 +217,7 @@ class PlayerEngine(QObject):
         self.queue = []
         self.index = -1
         self.current = None
-        self.player.setSource(QUrl())
+        self._quiet_pipeline(lambda: self.player.setSource(QUrl()), reattach=False)
         self.queue_changed.emit()
         self.track_changed.emit(None)
 
@@ -255,11 +301,11 @@ class PlayerEngine(QObject):
                 self._pending_seek = pos
         if self._analyzer is not None:
             self._analyzer.reset()
-        self.player.setSource(QUrl.fromLocalFile(path))
+        self._quiet_pipeline(lambda: self.player.setSource(QUrl.fromLocalFile(path)))
         self.track_changed.emit(info)
         self.queue_changed.emit()
         if autoplay:
-            self.player.play()
+            self._play()
 
     def _on_metadata(self) -> None:
         if not self.current:
@@ -304,7 +350,7 @@ class PlayerEngine(QObject):
                     self.db.mark_watched(self.current.path)
             if self.repeat == REPEAT_ONE:
                 self.player.setPosition(0)
-                self.player.play()
+                self._play()
             else:
                 nxt = self._neighbor(1)
                 if nxt is not None:
@@ -324,7 +370,7 @@ class PlayerEngine(QObject):
         if self._failures < min(5, len(self.queue)):
             nxt = self._neighbor(1)
             if nxt is not None and nxt != self.index:
-                QTimer.singleShot(400, lambda: self._load(nxt))
+                QTimer.singleShot(400, self, lambda: self._load(nxt))
 
     # ---------------------------------------------------------------- controles
     @property
@@ -338,7 +384,7 @@ class PlayerEngine(QObject):
             if self.player.mediaStatus() == QMediaPlayer.MediaStatus.NoMedia and 0 <= self.index < len(self.queue):
                 self._load(self.index)
             else:
-                self.player.play()
+                self._play()
 
     def _priority(self, state) -> None:
         """Con vídeo en reproducción, las tareas en segundo plano bajan a una (la imagen no debe tirones)."""
@@ -351,7 +397,7 @@ class PlayerEngine(QObject):
 
     def stop(self) -> None:
         self.save_position()
-        self.player.stop()
+        self._quiet_pipeline(self.player.stop, reattach=False)
 
     def seek(self, ms: int) -> None:
         if self.player.isSeekable():

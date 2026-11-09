@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import getpass
 import json
 import os
@@ -60,7 +59,18 @@ def _diagnostico(path: str) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+_FLAGS = ("full", "background", "register_associations", "unregister_associations", "register_context_menu",
+          "unregister_context_menu", "uninstall", "quiet")
+
+
+def _parse(argv: list[str]):
+    """Sin opciones (lo normal: doble clic o «Abrir con») no hace falta argparse, que tarda ~23 ms en cargarse."""
+    if not any(a.startswith("-") for a in argv):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(paths=list(argv), action=None, diagnostico=None, **dict.fromkeys(_FLAGS, False))
+    import argparse
+
     parser = argparse.ArgumentParser(prog="aero", description=f"{APP_NAME} {__version__}")
     parser.add_argument("paths", nargs="*", help="archivos o carpetas a abrir")
     parser.add_argument("--full", action="store_true", help="abrir los archivos en la aplicación completa")
@@ -77,7 +87,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--diagnostico", metavar="ARCHIVO", help="escribir un diagnóstico (versión, núcleo nativo, "
                         "iconos) en ARCHIVO .json y salir, sin ventanas")
     parser.add_argument("--version", action="version", version=__version__)
-    args = parser.parse_args(argv if argv is not None else sys.argv[1:])
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse(list(argv if argv is not None else sys.argv[1:]))
 
     if args.diagnostico:
         return _diagnostico(args.diagnostico)
@@ -104,6 +118,9 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, AttributeError):
             pass
 
+    from aero.core import crashlog
+
+    crashlog.install()                # registro local de errores (Ajustes › Acerca de)
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv[:1])
     app.setApplicationName(APP_NAME)

@@ -158,10 +158,18 @@ class PerformanceSettings(QWidget):
 
         from aero.ui.perf import auto_tuner
 
-        auto_tuner().step_changed.connect(lambda _s: self._show_auto())
-        settings.changed.connect(lambda k: k.startswith("quality_") and not self._loading and self.load())
+        # métodos y no lambdas: el ajustador y los ajustes viven más que esta página
+        auto_tuner().step_changed.connect(self._step_changed)
+        settings.changed.connect(self._setting_changed)
         self._detect()
         self.load()
+
+    def _step_changed(self, _step) -> None:
+        self._show_auto()
+
+    def _setting_changed(self, key: str) -> None:
+        if key.startswith("quality_") and not self._loading:
+            self.load()
 
     def _flat(self, text: str, fn, tip: str = "") -> QPushButton:
         b = QPushButton(text)

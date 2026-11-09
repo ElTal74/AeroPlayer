@@ -150,7 +150,7 @@ class Rail(QWidget):
 
     def resizeEvent(self, e):
         super().resizeEvent(e)
-        QTimer.singleShot(0, lambda: self.indicator.setGeometry(self.buttons[self.current].geometry()))
+        QTimer.singleShot(0, self, lambda: self.indicator.setGeometry(self.buttons[self.current].geometry()))
 
 
 class _IdleFilter(QObject):
@@ -179,6 +179,20 @@ class MainWindow(GlassWindow):
 
         self.engine = PlayerEngine(settings, db, self)
         self._converter = None
+        # Teclas multimedia: con la ventana activa siempre; en segundo plano (Windows) solo mientras suena algo
+        from aero.player import media_keys
+
+        self._media_keys = media_keys.MediaKeys(self._media_key, self)
+        self._media_shortcuts = media_keys.install_shortcuts(self, self._media_key)
+        self.engine.state_changed.connect(self._sync_media_keys)
+        settings.changed.connect(self._media_keys_setting)    # método: se desconecta solo al cerrar la ventana
+        # Barra de tareas de Windows: botones en la miniatura y progreso de las conversiones en el icono
+        from aero.ui import taskbar
+
+        self._taskbar = None
+        self._taskbar_msg = taskbar.button_created_message()
+        self.engine.state_changed.connect(self._update_thumb_buttons)
+        self.engine.queue_changed.connect(self._update_thumb_buttons)
 
         # ------------------------------------------------------------ estructura
         self.rail = Rail()
@@ -274,6 +288,7 @@ class MainWindow(GlassWindow):
 
             self._converter = ConversionManager(self.settings, self)
             self._converter.queue_idle.connect(self._conversions_idle)
+            self._converter.job_changed.connect(self._taskbar_progress)
         return self._converter
 
     def page(self, key: str) -> QWidget:
@@ -772,10 +787,63 @@ class MainWindow(GlassWindow):
         if self.controller:
             self.controller.main_closed(self)
 
+    def _media_key(self, name: str) -> None:
+        if name == "play_pause":
+            self.engine.toggle()
+        elif name == "next":
+            self.engine.next()
+        elif name == "previous":
+            self.engine.previous()
+        elif name == "stop":
+            self.engine.stop()
+
+    # ------------------------------------------------------------------ barra de tareas (Windows)
+    def nativeEvent(self, event_type, message):
+        if event_type == b"windows_generic_MSG":
+            from aero.ui import taskbar
+
+            name = taskbar.clicked_button(message)
+            if name:
+                self._media_key(name)
+                return True, 0
+            from ctypes import wintypes
+
+            if wintypes.MSG.from_address(int(message)).message == self._taskbar_msg:
+                self._update_thumb_buttons()
+        return super().nativeEvent(event_type, message)
+
+    def _tb(self):
+        if self._taskbar is None:
+            from aero.ui import taskbar
+
+            self._taskbar = taskbar.Taskbar()
+        return self._taskbar
+
+    def _update_thumb_buttons(self, *_):
+        if os.name != "nt" or not self.isVisible():
+            return
+        self._tb().set_buttons(int(self.winId()), self.engine.playing, bool(self.engine.queue))
+
+    def _taskbar_progress(self, _jid=None) -> None:
+        if os.name != "nt" or self._converter is None:
+            return
+        done, total, prog = self._converter.overall()
+        self._tb().set_progress(int(self.winId()), prog if total and done < total else None)
+
+    def _media_keys_setting(self, key: str) -> None:
+        if key == "media_keys":
+            self._sync_media_keys(int(self.engine.player.playbackState().value))
+
+    def _sync_media_keys(self, state: int) -> None:
+        # 1 = reproduciendo, 2 = en pausa; detenido (0) suelta las teclas para el resto de aplicaciones
+        self._media_keys.set_active(bool(self.settings.get("media_keys")) and state in (1, 2))
+
     def shutdown(self):
+        self._media_keys.set_active(False)
         self.settings.set("window_geometry", bytes(self.saveGeometry().toBase64()).decode())
         self.engine.save_position()
         self.engine.stop()
+        self.engine.dispose()            # salidas desconectadas antes de destruir la ventana (Linux y macOS)
         if self._converter is not None:
             self._converter.cancel_all()
         if "library" in self.pages:

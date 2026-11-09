@@ -24,7 +24,7 @@ body {
   line-height: 1.55;
   overflow-x: hidden;
 }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; height: auto; display: block; }
 a { color: #0a63b8; }
 
 /* ---------------------------------------------------------------- cielo */

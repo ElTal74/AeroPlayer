@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import threading
 from ctypes import wintypes
 
 from PySide6.QtCore import QThread, Signal
@@ -126,12 +127,18 @@ class HotkeyThread(QThread):
         self.hotkey = hotkey
         self.space_mode = space_mode
         self._tid = 0
+        self._ready = threading.Event()
         self._proc = None
 
     def run(self):
         if os.name != "nt":
+            self._ready.set()
             return
+        msg = wintypes.MSG()
+        # PostThreadMessage falla si el hilo aún no tiene cola de mensajes: PeekMessage la crea antes de avisar
+        user32.PeekMessageW(ctypes.byref(msg), None, 0x0400, 0x0400, 0)
         self._tid = kernel32.GetCurrentThreadId()
+        self._ready.set()
         registered = False
         parsed = parse_hotkey(self.hotkey)
         if parsed:
@@ -147,7 +154,6 @@ class HotkeyThread(QThread):
             hook = user32.SetWindowsHookExW(WH_KEYBOARD_LL, self._proc, kernel32.GetModuleHandleW(None), 0)
             if not hook:
                 self.failed.emit("No se pudo activar la barra espaciadora en el Explorador.")
-        msg = wintypes.MSG()
         while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
             if msg.message == WM_HOTKEY:
                 self.triggered.emit("hotkey")
@@ -169,6 +175,8 @@ class HotkeyThread(QThread):
         return user32.CallNextHookEx(None, n_code, w_param, l_param)
 
     def stop(self):
+        if self.isRunning() or not self.isFinished():
+            self._ready.wait(3)               # parado justo al arrancar: esperar a que exista su cola de mensajes
         if self._tid:
             user32.PostThreadMessageW(self._tid, WM_QUIT, 0, 0)
-        self.wait(2000)
+        self.wait(3000)

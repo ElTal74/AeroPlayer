@@ -439,6 +439,13 @@ def is_scanned(page, n_chars: int) -> bool:
 
 def convert(path: str, mode: str = "auto", lang: str = "auto", progress=None, cancelled=None) -> Document:
     """mode: auto (OCR solo en páginas escaneadas) | text (nunca OCR) | ocr (OCR en todas)."""
+    from aero.core.pdfium_lock import LOCK
+
+    with LOCK:                     # PDFium no admite dos hilos a la vez (ver aero/core/pdfium_lock.py)
+        return _convert(path, mode, lang, progress, cancelled)
+
+
+def _convert(path: str, mode: str, lang: str, progress, cancelled) -> Document:
     import pypdfium2 as pdfium
 
     pdf = pdfium.PdfDocument(path)

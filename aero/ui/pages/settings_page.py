@@ -168,6 +168,10 @@ class SettingsPage(QWidget):
         p, lay = section(tr("Reproducción"))
         lay.addWidget(self._check("remember_position", tr("Recordar dónde te quedaste")))
         lay.addWidget(self._check("remember_volume", tr("Recordar el volumen")))
+        mk = self._check("media_keys", tr("Teclas multimedia del teclado (reproducir, pausa, siguiente…)"))
+        mk.setToolTip(tr("Funcionan aunque AERO Player esté en segundo plano, solo mientras reproduce o está en "
+                         "pausa: así no se las quita a otras aplicaciones."))
+        lay.addWidget(mk)
         rs = self._check("viewer_remember_size", tr("Recordar el tamaño del visor"))
         rs.setToolTip(tr("Si está desactivado, la ventana se adapta a cada imagen o vídeo"))
         lay.addWidget(rs)
@@ -447,7 +451,15 @@ class SettingsPage(QWidget):
         gh = QPushButton(tr("Página del proyecto"))
         gh.setProperty("kind", "flat")
         gh.clicked.connect(lambda: tools.open_with_default(f"https://github.com/{UPDATE_REPO}"))
-        lay.addLayout(h_layout(tour2, gh, None))
+        bug = QPushButton(tr("Informar de un problema"))
+        bug.setProperty("kind", "flat")
+        bug.setToolTip(tr("Abre una incidencia en GitHub. Si algo falló, adjunta el registro de errores."))
+        bug.clicked.connect(lambda: tools.open_with_default(f"https://github.com/{UPDATE_REPO}/issues/new"))
+        errs = QPushButton(tr("Registro de errores"))
+        errs.setProperty("kind", "flat")
+        errs.setToolTip(tr("Carpeta con el registro local de errores. Nunca se envía: solo lo ves tú."))
+        errs.clicked.connect(self._open_error_log)
+        lay.addLayout(h_layout(tour2, gh, bug, errs, None))
         add("about", p)
 
         p, lay = section(tr("Actualizaciones"))
@@ -592,6 +604,11 @@ class SettingsPage(QWidget):
         self._refresh_assoc()
         self.message.emit(tr("Registrado. Elige AERO Player en la Configuración de Windows."), "ok")
         associations.open_default_apps_settings()
+
+    def _open_error_log(self):
+        from aero.core import crashlog
+
+        tools.open_with_default(str(crashlog.folder()))
 
     def _make_default_all(self):
         from aero.core import defaults

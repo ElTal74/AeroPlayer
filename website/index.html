@@ -8,13 +8,34 @@
 <meta name="author" content="David Seva Gonzalvez">
 <meta property="og:title" content="AERO Player">
 <meta property="og:description" content="Reproductor, visor, editores y conversor para Windows, Linux y macOS con estilo Aero. Gratis y libre.">
-<meta property="og:image" content="assets/capturas/es/inicio.png">
+<link rel="canonical" href="https://eltal74.github.io/AeroPlayer/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://eltal74.github.io/AeroPlayer/">
+<meta property="og:site_name" content="AERO Player">
+<meta property="og:image" content="https://eltal74.github.io/AeroPlayer/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="AERO Player reproduciendo una canción con la letra sincronizada">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://eltal74.github.io/AeroPlayer/assets/og.png">
 <meta name="theme-color" content="#2b8fe0">
 <link rel="icon" href="assets/favicon.png">
-<link rel="stylesheet" href="style.css?v=1.2.0">
-<link rel="stylesheet" href="anim.css?v=1.2.0">
-<script src="config.js?v=1.2.0"></script>
-<script src="i18n.js?v=1.2.0"></script>
+<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="preload" as="image" href="assets/capturas/es/reproductor.webp">
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "AERO Player",
+ "operatingSystem": "Windows 10, Windows 11, Linux, macOS 14+", "applicationCategory": "MultimediaApplication",
+ "description": "Reproductor de música y vídeo, visor universal, editores y conversor con estilo Aero. Gratis, libre y sin telemetría.",
+ "url": "https://eltal74.github.io/AeroPlayer/", "downloadUrl": "https://github.com/ElTal74/AeroPlayer/releases/latest",
+ "license": "https://www.gnu.org/licenses/gpl-3.0.html", "isAccessibleForFree": true,
+ "author": {"@type": "Person", "name": "David Seva Gonzalvez"},
+ "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+ "image": "https://eltal74.github.io/AeroPlayer/assets/og.png"}
+</script>
+<link rel="stylesheet" href="style.css?v=1.3.0">
+<link rel="stylesheet" href="anim.css?v=1.3.0">
+<script src="config.js?v=1.3.0"></script>
+<script src="i18n.js?v=1.3.0"></script>
 </head>
 <body>
 <div class="sky" aria-hidden="true">
@@ -66,14 +87,14 @@
     </div>
     <figure class="win7 hero-shot reveal">
       <div class="win7-bar"><span class="win7-title">AERO Player</span><span class="win7-btns"><i></i><i></i><i class="x"></i></span></div>
-      <img data-shot="reproductor" src="assets/capturas/es/reproductor.png" alt="AERO Player reproduciendo música con un visualizador" loading="eager">
+      <img data-shot="reproductor" src="assets/capturas/es/reproductor.webp" width="1280" height="780" alt="AERO Player reproduciendo música con un visualizador" loading="eager">
     </figure>
   </section>
 
   <section class="panel reveal" id="funciones">
     <h2 data-i18n="feat.title">Todo en una sola aplicación</h2>
     <div class="grid">
-      <article class="card tilt reveal"><img src="assets/iconos/audio.png" alt=""><h3 data-i18n="feat.player.t">Reproductor</h3><p data-i18n="feat.player.d">Música y vídeo con cola, subtítulos, pistas de audio, temporizador de apagado, series con siguiente episodio y 11 visualizadores que siguen el sonido real.</p></article>
+      <article class="card tilt reveal"><img src="assets/iconos/audio.png" alt=""><h3 data-i18n="feat.player.t">Reproductor</h3><p data-i18n="feat.player.d">Música y vídeo con cola, subtítulos, letras sincronizadas, teclas multimedia del teclado, temporizador de apagado, series con siguiente episodio y 11 visualizadores que siguen el sonido real.</p></article>
       <article class="card tilt reveal"><img src="assets/iconos/image.png" alt=""><h3 data-i18n="feat.viewer.t">Visor universal</h3><p data-i18n="feat.viewer.d">Fotos (también HEIC y AVIF), PDF, documentos, hojas, presentaciones, comprimidos e imágenes de disco. Vista rápida con Espacio desde el Explorador.</p></article>
       <article class="card tilt reveal"><img src="assets/iconos/video.png" alt=""><h3 data-i18n="feat.editors.t">Editores</h3><p data-i18n="feat.editors.d">Editor de vídeo con línea de tiempo y efectos, editor de imágenes con capas, AERO Paint, documentos, hojas, presentaciones y PDF a editable con OCR.</p></article>
       <article class="card tilt reveal"><img src="assets/iconos/folder.png" alt=""><h3 data-i18n="feat.files.t">Archivos</h3><p data-i18n="feat.files.d">Explorador con la familia de iconos AERO, búsqueda global ultrarrápida y nada se ejecuta sin que lo confirmes.</p></article>
@@ -91,7 +112,7 @@
     <div class="tabs" role="tablist" id="shot-tabs"></div>
     <figure class="win7 big" id="shot-frame">
       <div class="win7-bar"><span class="win7-title" id="shot-title">AERO Player</span><span class="win7-btns"><i></i><i></i><i class="x"></i></span></div>
-      <div class="shot-stage"><img id="shot-img" src="assets/capturas/es/inicio.png" alt=""><img id="shot-img2" class="next" src="assets/capturas/es/inicio.png" alt="" aria-hidden="true"></div>
+      <div class="shot-stage"><img id="shot-img" src="assets/capturas/es/inicio.webp" width="1280" height="780" alt=""><img id="shot-img2" class="next" src="assets/capturas/es/inicio.webp" width="1280" height="780" alt="" aria-hidden="true"></div>
       <div class="dots" id="shot-dots" aria-hidden="true"></div>
     </figure>
   </section>
@@ -199,6 +220,6 @@
 </footer>
 
 <div class="lightbox" id="lightbox" hidden><img alt=""></div>
-<script src="app.js?v=1.2.0"></script>
+<script src="app.js?v=1.3.0"></script>
 </body>
 </html>

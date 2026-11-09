@@ -193,6 +193,29 @@ def pdf_to_images(src: Path, dst: Path, opts: ConvertOptions, progress: Progress
     return outs
 
 
+def _pdf_to_text_pdfium(pdfium, src: Path, dst: Path, progress: Progress, cancelled: Cancelled) -> list[Path]:
+    try:
+        pdf = pdfium.PdfDocument(str(src))
+    except pdfium.PdfiumError as e:
+        raise ValueError("No se pudo abrir el PDF.") from e
+    try:
+        parts = []
+        n = len(pdf)
+        for i in range(n):
+            if cancelled():
+                raise ConversionCancelled()
+            page = pdf[i]
+            tp = page.get_textpage()
+            parts.append(tp.get_text_range().replace("\r\n", "\n"))
+            tp.close()
+            page.close()
+            progress((i + 1) / n)
+    finally:
+        pdf.close()
+    dst.write_text("\n\n\f".join(parts), encoding="utf-8")
+    return [dst]
+
+
 def pdf_to_text(src: Path, dst: Path, opts, progress: Progress, cancelled: Cancelled) -> list[Path]:
     # pypdfium2 une bien las letras de una misma línea aunque el PDF las coloque una a una (pasa con PDF
     # generados en Linux); QtPdf queda de reserva.
@@ -201,26 +224,10 @@ def pdf_to_text(src: Path, dst: Path, opts, progress: Progress, cancelled: Cance
     except ImportError:
         pdfium = None
     if pdfium is not None:
-        try:
-            pdf = pdfium.PdfDocument(str(src))
-        except pdfium.PdfiumError as e:
-            raise ValueError("No se pudo abrir el PDF.") from e
-        try:
-            parts = []
-            n = len(pdf)
-            for i in range(n):
-                if cancelled():
-                    raise ConversionCancelled()
-                page = pdf[i]
-                tp = page.get_textpage()
-                parts.append(tp.get_text_range().replace("\r\n", "\n"))
-                tp.close()
-                page.close()
-                progress((i + 1) / n)
-        finally:
-            pdf.close()
-        dst.write_text("\n\n\f".join(parts), encoding="utf-8")
-        return [dst]
+        from aero.core.pdfium_lock import LOCK
+
+        with LOCK:                 # PDFium no admite dos hilos a la vez (ver aero/core/pdfium_lock.py)
+            return _pdf_to_text_pdfium(pdfium, src, dst, progress, cancelled)
     from PySide6.QtPdf import QPdfDocument
 
     doc = QPdfDocument()

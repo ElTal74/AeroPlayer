@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Página no encontrada · AERO Player</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/AeroPlayer/assets/favicon.png">
+<style>
+  :root { --ink: #0d2b45; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body { min-height: 100vh; display: grid; place-items: center; padding: 16px; color: #fff;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif; overflow: hidden;
+    background: linear-gradient(180deg, #1868d6 0%, #5fc2ff 60%, #b8f0ff 100%); }
+  .hill { position: fixed; left: -20%; right: -20%; bottom: -40vh; height: 70vh; border-radius: 50%;
+    background: linear-gradient(180deg, #8be04e, #2f9a2a); }
+  .bubble { position: fixed; border-radius: 50%; border: 1px solid rgba(255,255,255,.65);
+    background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.9), rgba(255,255,255,.15) 40%, rgba(255,255,255,.25));
+    animation: rise linear infinite; bottom: -120px; }
+  @keyframes rise { to { transform: translateY(-120vh); } }
+  .card { position: relative; z-index: 1; max-width: 520px; width: 100%; text-align: center; padding: 34px 28px;
+    border-radius: 22px; border: 1px solid rgba(255,255,255,.7);
+    background: linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,.14));
+    box-shadow: inset 0 1px 0 #fff, 0 18px 40px rgba(0,40,90,.3); backdrop-filter: blur(10px); }
+  img { width: 96px; height: 96px; filter: drop-shadow(0 6px 14px rgba(0,30,70,.4)); }
+  h1 { font-size: 56px; margin: 8px 0 0; text-shadow: 0 3px 10px rgba(0,40,90,.45); }
+  p { font-size: 18px; margin: 8px 0 22px; text-shadow: 0 1px 3px rgba(0,40,90,.5); }
+  a { display: inline-block; padding: 12px 26px; border-radius: 12px; color: #fff; font-weight: 600;
+    text-decoration: none; background: linear-gradient(180deg, #7ee05a, #2f9a2a);
+    border: 1px solid rgba(255,255,255,.7); box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 6px 16px rgba(0,60,0,.3); }
+  a:hover { filter: brightness(1.08); }
+  a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { .bubble { animation: none; display: none; } }
+</style>
+</head>
+<body>
+<div class="hill" aria-hidden="true"></div>
+<main class="card">
+  <img src="/AeroPlayer/assets/logo.png" alt="">
+  <h1>404</h1>
+  <p id="msg">Esta página se ha ido flotando como una burbuja.</p>
+  <a id="home" href="/AeroPlayer/">Volver a AERO Player</a>
+</main>
+<script>
+  // Mismo idioma que la web, si el visitante ya la eligió
+  var T = { en: ["This page floated away like a bubble.", "Back to AERO Player"],
+            de: ["Diese Seite ist wie eine Blase davongeschwebt.", "Zurück zu AERO Player"],
+            it: ["Questa pagina è volata via come una bolla.", "Torna ad AERO Player"],
+            pt: ["Esta página saiu flutuando como uma bolha.", "Voltar ao AERO Player"],
+            ru: ["Эта страница улетела, как мыльный пузырь.", "Вернуться к AERO Player"],
+            zh: ["这个页面像气泡一样飘走了。", "返回 AERO Player"] };
+  var lang = "";
+  try { lang = localStorage.getItem("aero-lang") || ""; } catch (e) { /* sin almacenamiento */ }
+  if (!lang) lang = (navigator.language || "es").slice(0, 2);
+  if (T[lang]) { document.getElementById("msg").textContent = T[lang][0]; document.getElementById("home").textContent = T[lang][1]; document.documentElement.lang = lang; }
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    for (var i = 0; i < 12; i++) {
+      var b = document.createElement("div"), s = 20 + Math.random() * 60;
+      b.className = "bubble"; b.setAttribute("aria-hidden", "true");
+      b.style.width = b.style.height = s + "px"; b.style.left = Math.random() * 100 + "vw";
+      b.style.animationDuration = 9 + Math.random() * 10 + "s"; b.style.animationDelay = -Math.random() * 15 + "s";
+      document.body.appendChild(b);
+    }
+  }
+</script>
+</body>
+</html>

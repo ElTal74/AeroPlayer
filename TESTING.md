@@ -84,6 +84,25 @@ La trazabilidad completa (captura → causa → solución → prueba) está en
 
 **Total 1.2: 75 pruebas automáticas superadas.**
 
+## Versión pública 1.3.0 (2026-11-09)
+
+**Windows: 313 pruebas superadas, 2 omitidas. Linux y macOS: 291 superadas y 24 omitidas en cada uno.** `stress_check` con 5 semillas (3, 7, 21, 42, 99): 0 problemas.
+`i18n_screens --strict`: 0 textos sin traducir en ninguna pantalla de los 7 idiomas.
+
+| Área | Estado | Cómo |
+| --- | --- | --- |
+| Cuelgue al cerrar un vídeo (GIL frente a un mutex de Qt en el hilo de FFmpeg) | A + R | Encontrado con `stress_check --seed 21` y pila nativa con py-spy; la misma semilla y otras 4 ya terminan |
+| Carrera al parar los hilos de atajos justo al arrancarlos | A | `tests/test_v25.py`, repetido 3 veces seguidas |
+| Conexiones a señales globales que sobrevivían a la ventana | A | Se cierra y destruye la ventana y se emiten las señales |
+| Teclas multimedia (locales y globales solo al reproducir) | A | `tests/test_v25.py` |
+| Letras: LRC (desfase, varias marcas), ID3 USLT, panel, clic para saltar | A + R | Pruebas y captura de revisión en 7 idiomas |
+| Barra de tareas: ITaskbarList3, mensajes de los botones, progreso | A | Ventana real en el escritorio oculto |
+| Registro de errores y rotación | A | `tests/test_v25.py` |
+| Arranque: mutagen y argparse bajo demanda | A | `python -X importtime` y prueba en un proceso aparte |
+| Web: WebP, 10 capturas por idioma, imagen al compartir, JSON-LD válido, 404 | R | Navegador |
+| Fallo al cerrar en Linux/macOS: salidas de audio destruidas después del reproductor | A | Pila nativa en CI de macOS; ahora se crean antes que él |
+| PDFium desde varios hilos (cierre en macOS) | A | 6 hilos a la vez: nunca más de uno dentro de PDFium |
+
 ## Versión pública 1.2.0 (2026-11-09)
 
 **Windows: 298 pruebas automáticas superadas, 2 omitidas** (8 min 18 s en el escritorio oculto). **Linux (Ubuntu

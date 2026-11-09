@@ -1,5 +1,38 @@
 # Registro de cambios
 
+## 1.3.0 · Letras, teclas multimedia y más estabilidad
+
+- **Letras sincronizadas.**
+  - Con un archivo `.lrc` junto a la canción o con la letra incrustada en las etiquetas (MP3, FLAC, OGG,
+    M4A), el reproductor la muestra con la línea que suena resaltada.
+  - Clic en una línea para saltar a ese momento.
+  - El botón «Letra» la muestra u oculta.
+- **Teclas multimedia del teclado** (reproducir/pausa, siguiente, anterior, detener).
+  - En Windows funcionan también con AERO Player en segundo plano, solo mientras reproduce o está en pausa,
+    para no quitárselas a otras aplicaciones.
+  - Se pueden desactivar en Ajustes › Reproducción.
+- **Barra de tareas de Windows:** botones Anterior, Reproducir/Pausa y Siguiente en la miniatura de la
+  ventana, y el progreso de las conversiones en el icono.
+- **Registro local de errores** y botón «Informar de un problema» en Ajustes › Acerca de. El registro nunca
+  se envía.
+- **Arreglado: cuelgue al cerrar un vídeo.**
+  - En raras ocasiones la ventana se quedaba congelada.
+  - Causa: el hilo de FFmpeg y el de la interfaz se esperaban mutuamente.
+- **Arreglado: cierre al parar los atajos justo después de iniciarlos.**
+- **Arreglado:** en Linux y macOS el programa podía cerrarse de golpe al cerrar una ventana con música,
+  o al convertir dos PDF a la vez.
+- **Arreglado:** varias conexiones podían llamar a una ventana ya cerrada (ajustes de rendimiento,
+  conversor, barra lateral).
+- **Más rápido y ligero.**
+  - Arranque unos 60 ms más rápido: mutagen y argparse solo se cargan si hacen falta.
+  - La ventana de vídeo ya no ejecuta código Python en cada fotograma.
+  - Descargas de torrents más fiables (ninguna conexión se pierde a medias).
+- **Web.**
+  - Capturas en WebP: unas 6 veces más ligeras, y la página carga mucho antes.
+  - Nueva captura de las letras.
+  - Imagen al compartir el enlace (WhatsApp, X, Discord…).
+  - Datos para buscadores y página 404 con estilo Aero.
+
 ## 1.2.0 · Windows, Linux y macOS
 
 - **Ahora también en Linux y macOS.**

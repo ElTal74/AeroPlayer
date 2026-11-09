@@ -10,7 +10,8 @@ código: https://github.com/ElTal74/AeroPlayer
 
 - **Reproductor**: música y vídeo (MP3, FLAC, AAC, OGG, Opus, WAV, MKV, MP4, MOV, AVI, WebM…), cola,
   aleatorio, repetir, velocidad, pistas de audio, subtítulos incrustados y externos con desfase, pantalla
-  completa, recuerda posición y volumen.
+  completa, recuerda posición y volumen, letras sincronizadas (`.lrc` o incrustadas), teclas multimedia del
+  teclado y botones en la miniatura de la barra de tareas de Windows.
 - **Visualizadores** que analizan el sonido real (FFT): 11 estilos (Aero Waves, Liquid Spectrum, Aurora,
   Particles, Equalizer Classic, Glass Bars, Energy Flow, Nebula, Water Rings, Fluid Motion y Anillo) con
   galería, favoritos, colores, intensidad, velocidad y sensibilidad. También en la vista rápida de audio.
@@ -73,10 +74,10 @@ Todas las descargas están en [Releases](https://github.com/ElTal74/AeroPlayer/r
 
 | Sistema | Descarga | Cómo |
 | --- | --- | --- |
-| Windows 10 y 11 (64 bits) | `AeroPlayer-1.2.0-setup.exe` | Instalador propio, no requiere administrador |
-| Windows (portable) | `AeroPlayer-1.2.0-portable.zip` | Descomprimir y ejecutar `AeroPlayer.exe` |
-| Linux (64 bits) | `AeroPlayer-1.2.0-linux-x86_64.tar.gz` | Descomprimir y ejecutar `./install.sh` (menú y «Abrir con») |
-| macOS 14+ (Apple Silicon) | `AeroPlayer-1.2.0-macos-arm64.dmg` | Arrastrar AERO Player a Aplicaciones; la primera vez, clic derecho › Abrir |
+| Windows 10 y 11 (64 bits) | `AeroPlayer-1.3.0-setup.exe` | Instalador propio, no requiere administrador |
+| Windows (portable) | `AeroPlayer-1.3.0-portable.zip` | Descomprimir y ejecutar `AeroPlayer.exe` |
+| Linux (64 bits) | `AeroPlayer-1.3.0-linux-x86_64.tar.gz` | Descomprimir y ejecutar `./install.sh` (menú y «Abrir con») |
+| macOS 14+ (Apple Silicon) | `AeroPlayer-1.3.0-macos-arm64.dmg` | Arrastrar AERO Player a Aplicaciones; la primera vez, clic derecho › Abrir |
 
 En Linux y macOS todo funciona igual salvo lo exclusivo del Explorador de Windows (iconos AERO, menú del clic
 derecho y vista rápida con Espacio). Para hacerlo predeterminado para todos tus archivos: **Ajustes › Archivos y

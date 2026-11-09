@@ -201,7 +201,7 @@ class MediaWindow(GlassWindow):
         self.btn_back.setVisible(bool(self._history))
         for k in self._viewer_keys:
             k.setEnabled(self.kind not in ("folder", "archive"))
-        self._sized_for_video = False
+        self._watch_first_frame()
         self.aspect = 0.0
         self.btn_full.setVisible(self.kind in ("image", "video", "slides", "pdf"))
         self.actions_bar.set_path(self.path)
@@ -407,9 +407,28 @@ class MediaWindow(GlassWindow):
         v = QVideoWidget()
         v.setAspectRatioMode(Qt.AspectRatioMode.KeepAspectRatio)
         opaque_video(v)
-        v.videoSink().videoFrameChanged.connect(self._first_frame)
+        self._frame_sink = v.videoSink()
+        self._frame_sink.videoFrameChanged.connect(self._first_frame)
+        self._frame_watch = True
         v.mouseDoubleClickEvent = lambda e: self.toggle_fullscreen()
         return v
+
+    def _watch_first_frame(self) -> None:
+        """Vuelve a escuchar el primer fotograma (para ajustar la ventana) de un vídeo nuevo."""
+        self._sized_for_video = False
+        sink = getattr(self, "_frame_sink", None)
+        if sink is not None and not getattr(self, "_frame_watch", False):
+            sink.videoFrameChanged.connect(self._first_frame)
+            self._frame_watch = True
+
+    def _unwatch_first_frame(self) -> None:
+        sink = getattr(self, "_frame_sink", None)
+        if sink is not None and getattr(self, "_frame_watch", False):
+            self._frame_watch = False
+            try:
+                sink.videoFrameChanged.disconnect(self._first_frame)
+            except (RuntimeError, TypeError):
+                pass
 
     def _first_frame(self, frame):
         if self._sized_for_video or not frame.isValid():
@@ -417,6 +436,7 @@ class MediaWindow(GlassWindow):
         size = frame.size()
         if size.width() > 0 and size.height() > 0:
             self._sized_for_video = True
+            self._unwatch_first_frame()            # ya se sabe el tamaño: sin una llamada a Python por fotograma
             self.aspect = size.width() / size.height()
             self.info.setText(f"{size.width()} × {size.height()} · {self.info.text()}")
             self._resize_for(size.width(), size.height(), upscale=True)
@@ -495,7 +515,7 @@ class MediaWindow(GlassWindow):
             self._audio_viz.set_caption("")
             self.backdrop.set_ambient(info.cover)
         else:
-            self._sized_for_video = False  # el siguiente episodio puede tener otra proporción
+            self._watch_first_frame()  # el siguiente episodio puede tener otra proporción
 
     def _duration(self, d: int):
         self._seek.setRange(0, max(0, d))
@@ -894,9 +914,9 @@ class MediaWindow(GlassWindow):
 
     def _stop_media(self):
         if self.engine is not None:
+            self.engine.set_analysis(False)      # antes de parar: ver PlayerEngine._quiet_pipeline
             self.engine.save_position()
             self.engine.stop()
-            self.engine.set_analysis(False)
         if hasattr(self, "_audio_viz"):
             self._audio_viz.stop()
         if "image" in self._views:
@@ -917,6 +937,8 @@ class MediaWindow(GlassWindow):
         if self.settings.get("viewer_remember_size") and not self.quicklook and not self.isFullScreen():
             self.settings.set("viewer_last_size", [self.width(), self.height()])
         self._stop_media()
+        if self.engine is not None and not self.quicklook:
+            self.engine.dispose()        # salidas desconectadas antes de destruir la ventana (Linux y macOS)
         kill_override_cursor()
         if "browse" in self._views:
             self._views["browse"].cleanup()

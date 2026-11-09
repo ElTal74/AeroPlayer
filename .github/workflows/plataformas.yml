@@ -14,6 +14,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04, macos-15]
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -45,12 +46,12 @@ jobs:
         if: runner.os == 'Linux'
         env:
           QT_QPA_PLATFORM: xcb
-        run: xvfb-run -a -s "-screen 0 1920x1080x24" .venv/bin/python -m pytest -q -p no:cacheprovider -rfE
+        run: xvfb-run -a -s "-screen 0 1920x1080x24" .venv/bin/python -m pytest -q -p no:cacheprovider -rfE -o faulthandler_timeout=150
       - name: Pruebas (macOS)
         if: runner.os == 'macOS'
         env:
           QT_QPA_PLATFORM: cocoa
-        run: .venv/bin/python -m pytest -q -p no:cacheprovider -rfE
+        run: .venv/bin/python -m pytest -q -p no:cacheprovider -rfE -o faulthandler_timeout=150
       - name: Paquete
         if: success() || failure()        # el paquete se comprueba aunque falle alguna prueba
         env:

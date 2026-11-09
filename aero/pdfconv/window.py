@@ -29,14 +29,17 @@ def _render_page(path: str, index: int, width_px: int):
     """Hilo de trabajo: imagen de la página original para la comparación."""
     import pypdfium2 as pdfium
 
-    pdf = pdfium.PdfDocument(path)
-    try:
-        page = pdf[index]
-        scale = width_px / page.get_width()
-        pil = page.render(scale=scale).to_pil().convert("RGB")
-        page.close()
-    finally:
-        pdf.close()
+    from aero.core.pdfium_lock import LOCK
+
+    with LOCK:
+        pdf = pdfium.PdfDocument(path)
+        try:
+            page = pdf[index]
+            scale = width_px / page.get_width()
+            pil = page.render(scale=scale).to_pil().convert("RGB")
+            page.close()
+        finally:
+            pdf.close()
     from PySide6.QtGui import QImage
 
     data = pil.tobytes()
@@ -144,7 +147,7 @@ class PdfConvertWindow(GlassWindow):
 
     def showEvent(self, e):
         super().showEvent(e)
-        QTimer.singleShot(0, lambda: self._split.setSizes([self._split.width() // 2] * 2))
+        QTimer.singleShot(0, self, lambda: self._split.setSizes([self._split.width() // 2] * 2))
 
     def _titled(self, text: str, w: QWidget) -> QWidget:
         box = QWidget()
@@ -169,13 +172,20 @@ class PdfConvertWindow(GlassWindow):
         self.doc = None
         self.save_btn.setEnabled(False)
         self.result.setHtml("<p style='color:#888'>Pulsa «Convertir» para reconstruir el documento.</p>")
-        try:
-            pdf = pdfium.PdfDocument(self.path)
-            self.n_pages = len(pdf)
-            pdf.close()
-        except Exception as e:  # noqa: BLE001
-            QMessageBox.warning(self, "PDF", tr("No se pudo abrir el PDF: {e}", e=e))
-            return
+        from aero.core.pdfium_lock import try_lock
+
+        with try_lock() as free:
+            if not free:               # otra conversión usa PDFium: no se congela la ventana esperando
+                QMessageBox.information(self, "PDF", tr("Espera a que termine la conversión en curso y vuelve a "
+                                                        "abrir el PDF."))
+                return
+            try:
+                pdf = pdfium.PdfDocument(self.path)
+                self.n_pages = len(pdf)
+                pdf.close()
+            except Exception as e:  # noqa: BLE001
+                QMessageBox.warning(self, "PDF", tr("No se pudo abrir el PDF: {e}", e=e))
+                return
         self.sub.setText(tr("{v0} · {n_pages} páginas", v0=Path(path).name, n_pages=self.n_pages))
         self.page.setRange(1, max(1, self.n_pages))
         self.page.setValue(1)

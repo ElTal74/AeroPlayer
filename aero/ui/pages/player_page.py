@@ -196,13 +196,30 @@ class PlayerPage(QWidget):
 
         self.close_btn = IconButton("close", tr("Cerrar y volver (Esc)"), 16, button=30)
         self.close_btn.clicked.connect(self.close_requested.emit)
-        self.head.setLayout(h_layout(self.heading, None, self.scene_label, self.scene_box, 10,
+        # Letras (.lrc junto a la canción o incrustadas): el botón solo aparece si la canción tiene
+        from aero.ui.lyrics_panel import LyricsPanel
+
+        self.lyrics = LyricsPanel()
+        self.lyrics.seek_requested.connect(engine.seek)
+        self.lyrics.setVisible(False)
+        self.lyrics_btn = QPushButton(tr("Letra"))
+        self.lyrics_btn.setIcon(tm().icon("text", 16))
+        self.lyrics_btn.setCheckable(True)
+        self.lyrics_btn.setChecked(bool(settings.get("lyrics_visible")))
+        self.lyrics_btn.setToolTip(tr("Mostrar u ocultar la letra (archivo .lrc o letra incrustada)"))
+        self.lyrics_btn.toggled.connect(self._lyrics_toggled)
+        self.lyrics_btn.setVisible(False)
+        self._lyrics_token = 0
+        self.head.setLayout(h_layout(self.heading, None, self.lyrics_btn, 6, self.scene_label, self.scene_box, 10,
                                      self.aspect_label, self.aspect, 8, self.close_btn, spacing=6))
         stage_lay = QVBoxLayout(self.stage)
         stage_lay.setContentsMargins(10, 10, 10, 10)
         stage_lay.setSpacing(8)
         stage_lay.addWidget(self.head)
-        stage_lay.addWidget(self.stack, 1)
+        body = h_layout(self.stack, self.lyrics, spacing=12)
+        body.setStretch(0, 3)
+        body.setStretch(1, 2)
+        stage_lay.addLayout(body, 1)
 
         self.queue = QueuePanel(engine)
         self.queue.setVisible(False)
@@ -211,6 +228,7 @@ class PlayerPage(QWidget):
 
         self.viz_on = bool(settings.get("visualizer_enabled"))
         engine.track_changed.connect(self._track)
+        engine.position_changed.connect(self.lyrics.set_position)
         engine.subtitle_text.connect(self._ext_sub)
         self._update_mode()
 
@@ -225,6 +243,39 @@ class PlayerPage(QWidget):
         self.visualizer.set_caption(f"{info.display_title}  ·  {info.artist}" if info and info.artist else
                                     (info.display_title if info else ""))
         self._update_mode()
+        self._load_lyrics(info)
+
+    # ------------------------------------------------------------------ letras
+    def _load_lyrics(self, info) -> None:
+        self._lyrics_token += 1
+        token = self._lyrics_token
+        self.lyrics.set_lyrics(None)
+        self._show_lyrics()
+        if info is None or info.kind != "audio":
+            return
+        from aero.core import lyrics
+        from aero.ui.async_util import run_async
+
+        path = info.path
+
+        def done(ly):
+            if token == self._lyrics_token:
+                self.lyrics.set_lyrics(ly)
+                self._show_lyrics()
+                self.lyrics.set_position(self.engine.player.position())
+
+        run_async(lambda: lyrics.load(path), done, None, self)
+
+    def _show_lyrics(self) -> None:
+        has = self.lyrics.lyrics is not None
+        self.lyrics_btn.setVisible(has)
+        self.lyrics.setVisible(has and self.lyrics_btn.isChecked())
+
+    def _lyrics_toggled(self, on: bool) -> None:
+        self.settings.set("lyrics_visible", on)
+        self._show_lyrics()
+        if on:
+            self.lyrics.set_position(self.engine.player.position())
 
     def set_visualizer(self, on: bool):
         self.viz_on = on

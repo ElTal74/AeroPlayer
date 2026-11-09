@@ -35,10 +35,10 @@
   function t(key) { return lang === "es" ? ES[key] : ((I18N[lang] || {})[key] || (I18N.en || {})[key] || ES[key]); }
 
   // ------------------------------------------------------------ capturas (en el idioma de la página)
-  var SHOTS = ["inicio", "reproductor", "biblioteca", "archivos", "visor", "editor_video", "paint", "conversor", "tema_naturaleza"];
+  var SHOTS = ["inicio", "reproductor", "letra", "biblioteca", "archivos", "visor", "editor_video", "paint", "conversor", "tema_naturaleza"];
   var tabs = $("#shot-tabs"), img = $("#shot-img"), img2 = $("#shot-img2"), title = $("#shot-title"), dots = $("#shot-dots");
   var current = 0, timer = null, paused = false;
-  function shotSrc(name) { return "assets/capturas/" + lang + "/" + name + ".png"; }
+  function shotSrc(name) { return "assets/capturas/" + lang + "/" + name + ".webp"; }
   function shotName(name) { return (NAMES[name] || {})[lang] || (NAMES[name] || {}).en || name; }
   function showShot(i, animate) {
     current = (i + SHOTS.length) % SHOTS.length;

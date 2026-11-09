@@ -144,4 +144,4 @@ class Sidebar(GlassPanel):
         self.compact_changed.emit(on)
         from PySide6.QtCore import QTimer
 
-        QTimer.singleShot(0, lambda: self.select(self.current))
+        QTimer.singleShot(0, self, lambda: self.select(self.current))

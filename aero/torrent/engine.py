@@ -259,6 +259,7 @@ class Download:
         self.total = sum(t.files[i].length for i in self.selected)
         self.state, self.message = "checking", ""
         self.peers: dict[tuple, _Peer] = {}
+        self._bg: set[asyncio.Future] = set()     # tareas sueltas: sin referencia, asyncio podría liberarlas a medias
         self.known: set[tuple] = set()
         self.extra_peers: list[tuple[str, int]] = []      # pares añadidos a mano (o por las pruebas)
         self.inflight: dict[int, _Piece] = {}
@@ -362,7 +363,13 @@ class Download:
             await asyncio.to_thread(self.storage.finish_file, i)
         self.state, self.message = "done", ""
         for url in self.t.trackers:
-            asyncio.ensure_future(asyncio.to_thread(self._safe_announce, url, "completed"))
+            self._spawn(asyncio.to_thread(self._safe_announce, url, "completed"))
+
+    def _spawn(self, coro) -> asyncio.Future:
+        task = asyncio.ensure_future(coro)
+        self._bg.add(task)
+        task.add_done_callback(self._bg.discard)
+        return task
 
     def _safe_announce(self, url, event):
         try:
@@ -419,7 +426,7 @@ class Download:
                 tried[addr] = now
                 peer = _Peer(addr)
                 self.peers[addr] = peer
-                asyncio.ensure_future(self._peer_loop(peer))
+                self._spawn(self._peer_loop(peer))
             await asyncio.sleep(2)
 
     def _timeouts(self):

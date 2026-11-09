@@ -39,4 +39,9 @@ def window_image(w, radius: float = 8.0) -> QImage:
 
 
 def save(w, path: str) -> None:
-    window_image(w).save(path)
+    """Guarda la captura; con extensión .webp, comprimida para la web (unas 4 veces menos que PNG)."""
+    img = window_image(w)
+    if path.lower().endswith(".webp"):
+        img.save(path, "WEBP", 86)
+    else:
+        img.save(path)

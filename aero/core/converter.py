@@ -119,9 +119,14 @@ class ConversionManager(QObject):
         from aero.core.tasks import tasks
 
         # Las conversiones comparten plazas «pesadas» con el resto de módulos (OCR, exportaciones…).
-        tasks().slot_freed.connect(lambda kind: kind == "heavy" and self._sched.start())
+        # método y no lambda: la cola de tareas es global y vive más que este gestor
+        tasks().slot_freed.connect(self._slot_freed)
         self._activity: dict[int, str] = {}
         self.job_changed.connect(self._report)
+
+    def _slot_freed(self, kind: str) -> None:
+        if kind == "heavy":
+            self._sched.start()
 
     def _report(self, jid: int) -> None:
         """Refleja cada conversión en el centro de tareas común."""

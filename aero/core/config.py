@@ -57,6 +57,7 @@ DEFAULTS: dict = {
     "reduce_motion": False,
     "background_motion": "on",       # fondo animado: on | reduced | static
     "visualizer_enabled": True,
+    "lyrics_visible": True,            # panel de letras cuando la canción tiene
     "visualizer_scene": 0,
     "visualizer_key": "glass_bars",
     "visualizer_favorites": [],
@@ -95,6 +96,7 @@ DEFAULTS: dict = {
     "holiday_region": "auto",        # región de las fechas especiales (aero.core.seasons.REGIONS)
     "visualizer_low_power": False,
     "remember_position": True,
+    "media_keys": True,                # teclas multimedia del teclado, también en segundo plano
     "remember_volume": True,
     "volume": 0.8,
     "subtitle_scale": 1.0,

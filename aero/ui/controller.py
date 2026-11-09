@@ -197,7 +197,7 @@ class AppController(QObject):
             self.main = MainWindow(self.settings, self.db, self)
         self.main.show_window()
         if paths:
-            QTimer.singleShot(0, lambda: self.main.open_paths(paths))
+            QTimer.singleShot(0, self.main, lambda: self.main is not None and self.main.open_paths(paths))
         elif not self.settings.get("tutorial_done") and not os.environ.get("AERO_NO_TUTORIAL"):
             # Primera vez: tutorial de bienvenida (se puede saltar; se vuelve a ver desde Ajustes)
             QTimer.singleShot(700, lambda: self.main is not None and self.main.start_tutorial())
