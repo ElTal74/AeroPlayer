@@ -24,7 +24,7 @@
 - **Arreglado:** en las descargas de la versión 1.0.0 faltaba el componente del visor PDF. Por eso el visor no se
   abría, tampoco con fotos ni documentos. Ahora la compilación comprueba que no falte nada, y si un día faltara el
   visor PDF, solo fallarían los PDF y la aplicación diría por qué.
-- **Arreglado:** un cierre inesperado poco frecuente relacionado con los avisos de actualización y las novedades.
+- **Arreglado:** cierres inesperados poco frecuentes. Python podía destruir ventanas de Qt desde un hilo secundario; ahora la limpieza de memoria se hace siempre en el hilo principal.
 - **Firma digital preparada:** los ejecutables se firman automáticamente cuando hay un certificado configurado.
 - **Copyright y licencia:** © 2026 David Seva Gonzalvez, GPL-3.0-or-later. Ver `NOTICE.md`.
 - **Web nueva** en 7 idiomas, con animaciones, capturas en el idioma de la página y una comparativa entre el

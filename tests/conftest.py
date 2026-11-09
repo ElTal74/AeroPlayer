@@ -46,6 +46,9 @@ def qapp():
 
     # El reposo (equipo sin usar o con batería) pararía el fondo animado a mitad de una prueba.
     auto_tuner().set_rest_enabled(False)
+    from aero.ui import gc_guard
+
+    gc_guard.install(app)            # como en la aplicación: recolección de ciclos solo en el hilo principal
     yield app
     # Cierre ordenado: ventanas cerradas y sin tareas en hilos antes de que termine el intérprete (si no, el
     # proceso puede abortar al salir aunque todas las pruebas hayan pasado).
@@ -107,6 +110,13 @@ def controller(qapp, media):
     if ctl.main is not None:
         ctl.main.quitting = True
         ctl.main.close()
+    qapp.processEvents()
+    # processEvents() no ejecuta los deleteLater(): sin esto, las ventanas cerradas de cada prueba seguían vivas
+    # (con sus temporizadores) y se acumulaban hasta provocar fallos que en la aplicación real no pueden darse.
+    from PySide6.QtCore import QEvent
+
+    QThreadPool.globalInstance().waitForDone(5000)
+    qapp.sendPostedEvents(None, QEvent.Type.DeferredDelete.value)
     qapp.processEvents()
 
 

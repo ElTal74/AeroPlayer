@@ -439,3 +439,46 @@ def test_viewer_works_without_qtpdf(qapp, tmp_path):
     r = subprocess.run([sys.executable, str(script), str(photo), str(pdf)], capture_output=True, text=True,
                        timeout=120, env=env, cwd=str(root))
     assert r.returncode == 0 and "ok" in r.stdout, r.stdout + r.stderr
+
+
+# ----------------------------------------------------------------------------- recolección en el hilo principal
+
+def test_cycles_are_collected_only_on_the_main_thread(qapp):
+    """Un objeto de Qt en un ciclo de referencias se destruye en el hilo principal, nunca en un hilo secundario."""
+    import gc
+    import threading
+    import weakref
+
+    from PySide6.QtCore import QObject, QThread, QTimer
+
+    from aero.ui import gc_guard
+
+    guard = gc_guard.install(qapp)
+    assert not gc.isenabled()
+    destroyed_in = []
+
+    class Holder:
+        pass
+
+    def make():
+        h = Holder()
+        h.obj = QObject()
+        h.obj.timer = QTimer(h.obj)
+        h.obj.timer.start(50)
+        h.self = h                                           # ciclo: solo lo libera el recolector
+        main = QThread.currentThread()
+        h.obj.destroyed.connect(lambda *_: destroyed_in.append(QThread.currentThread() is main))
+        return weakref.ref(h)
+
+    ref = make()
+
+    def allocate():                                          # mucha basura en otro hilo: antes disparaba el recolector aquí
+        junk = [[] for _ in range(200_000)]
+        del junk
+    t = threading.Thread(target=allocate)
+    t.start()
+    t.join()
+    assert ref() is not None                                 # el hilo secundario no recogió nada
+    gc.collect()                                             # lo que hace el temporizador del hilo principal
+    assert ref() is None and destroyed_in == [True]
+    assert guard.check() in (-1, 0, 1, 2)

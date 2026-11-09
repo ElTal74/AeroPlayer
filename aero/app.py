@@ -111,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     app.setApplicationVersion(__version__)
     app.setStyle("Fusion")
     app.setQuitOnLastWindowClosed(False)
+    from aero.ui import gc_guard
+
+    gc_guard.install(app)            # objetos de Qt destruidos siempre en el hilo principal (ver gc_guard.py)
     font = QFont("Segoe UI Variable Text")
     font.setPointSizeF(10)
     app.setFont(font)

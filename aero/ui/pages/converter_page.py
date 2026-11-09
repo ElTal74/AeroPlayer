@@ -103,9 +103,13 @@ class QueueTable(QTableWidget):
     def __init__(self, *a):
         super().__init__(*a)
         m = self.model()
+        # método y no lambda: Qt lo desconecta al destruir la tabla (el modelo aún avisa al vaciarse)
         for sig in (m.rowsInserted, m.rowsRemoved, m.modelReset):
-            sig.connect(lambda *_: self.horizontalHeader().setVisible(self.rowCount() > 0))
+            sig.connect(self._sync_header)
         self.horizontalHeader().setVisible(False)
+
+    def _sync_header(self, *_):
+        self.horizontalHeader().setVisible(self.rowCount() > 0)
 
     def paintEvent(self, e):
         super().paintEvent(e)
