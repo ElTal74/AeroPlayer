@@ -27,7 +27,7 @@ a = Analysis(  # noqa: F821
     [str(ROOT / "aero" / "__main__.py")],
     pathex=[str(ROOT)],
     binaries=[],
-    datas=[(str(ROOT / "LICENSE"), "."), (str(ROOT / "THIRD_PARTY_NOTICES.md"), "."),
+    datas=[(str(ROOT / "LICENSE"), "."), (str(ROOT / "NOTICE.md"), "."), (str(ROOT / "CHANGELOG.md"), "."), (str(ROOT / "THIRD_PARTY_NOTICES.md"), "."),
            (str(ROOT / "packaging" / "aeroarchive.ico"), "."),
            (str(ROOT / "aero" / "i18n" / "locales"), "aero/i18n/locales"),
            (str(ROOT / "packaging" / "icons"), "icons")],      # iconos .ico de las categorías para el Explorador

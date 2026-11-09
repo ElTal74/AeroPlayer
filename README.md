@@ -3,6 +3,9 @@
 Reproductor multimedia, visor universal, editor de imágenes, vídeo y documentos, y conversor de archivos para
 Windows, con temas y fondos personalizables. Software libre (GPL-3.0-or-later), sin telemetría.
 
+**© 2026 David Seva Gonzalvez.** Web oficial y descargas: https://eltal74.github.io/AeroPlayer/ ·
+código: https://github.com/ElTal74/AeroPlayer
+
 ## Qué hace
 
 - **Reproductor**: música y vídeo (MP3, FLAC, AAC, OGG, Opus, WAV, MKV, MP4, MOV, AVI, WebM…), cola,
@@ -66,8 +69,24 @@ para el diseño técnico y [TESTING.md](TESTING.md) para las pruebas y medicione
 
 ## Instalar y ejecutar (para usuarios)
 
-Descarga `AeroPlayer-1.0.0-setup.exe` (instalador propio, no requiere administrador) o
-`AeroPlayer-1.0.0-portable.zip` (descomprimir y ejecutar `AeroPlayer.exe`) desde Releases.
+Descarga `AeroPlayer-1.1.0-setup.exe` (instalador propio, no requiere administrador) o
+`AeroPlayer-1.1.0-portable.zip` (descomprimir y ejecutar `AeroPlayer.exe`) desde Releases.
+
+> **La versión portable no incluye el 100 % de las funciones del programa.** Es ideal para un USB o un ordenador
+> donde no puedes instalar nada, pero la integración con Windows y las actualizaciones con un clic son del
+> instalador.
+
+| Lo que puedes hacer | Instalador | Portable |
+| --- | :---: | :---: |
+| Reproducir, ver, editar, convertir y comprimir | ✔ | ✔ |
+| Accesos directos en Inicio y en el escritorio | ✔ | ✘ |
+| «Abrir con» y aplicación predeterminada | ✔ | Desde Ajustes (se pierde si mueves la carpeta) |
+| Iconos AERO en el Explorador | ✔ | Desde Ajustes |
+| Menú del clic derecho del Explorador | ✔ | Desde Ajustes |
+| Actualizaciones | Con un clic | Aviso y descarga manual |
+| Desinstalar desde Configuración de Windows | ✔ | Borrar la carpeta |
+| Funciona sin instalar (USB, PC del trabajo) | ✘ | ✔ |
+| Tus ajustes y biblioteca | Se guardan en tu usuario | Se guardan en tu usuario |
 
 El instalador tiene el mismo aspecto que la aplicación: pulsa **Instalar** o **Personalizar…** para elegir
 carpeta, accesos directos, el menú del clic derecho, «Abrir con» y el tema con el que empezar. Si ya tenías
@@ -152,9 +171,13 @@ Decisiones principales:
 
 ## Privacidad
 
-Sin telemetría ni conexiones de red. Datos en `%APPDATA%\AeroPlayer` (preferencias, biblioteca, listas) y
+Sin telemetría: AERO Player no envía datos de uso a nadie. Solo se conecta a internet para buscar versiones nuevas
+(desactivable) y para las descargas BitTorrent que inicies tú. Datos en `%APPDATA%\AeroPlayer` (preferencias, biblioteca, listas) y
 caché en `%LOCALAPPDATA%\AeroPlayer\cache`. Ajustes › Privacidad permite borrar historial, caché o todo.
 Desinstalar no borra tus archivos multimedia.
+
+* **Actualizaciones:** una vez al día como mucho, AERO Player pregunta a GitHub si hay una versión nueva. No
+  envía datos tuyos y se puede desactivar en Ajustes › Acerca de. Nada se instala sin que pulses «Actualizar».
 
 ## Limitaciones conocidas
 
@@ -178,4 +201,11 @@ Desinstalar no borra tus archivos multimedia.
 
 ## Licencia
 
-GPL-3.0-or-later. Consulta [LICENSE](LICENSE) y [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Copyright © 2026 David Seva Gonzalvez.
+
+* El código es **software libre** bajo la **GPL-3.0-or-later** (`LICENSE`): puedes usarlo, estudiarlo,
+  modificarlo y compartirlo. Las versiones que distribuyas tienen que mantener la autoría, publicar su código y
+  usar la misma licencia.
+* El nombre **«AERO Player»** y su logotipo **no** se conceden con la licencia: una versión modificada debe
+  llevar otro nombre.
+* Los detalles están en [NOTICE.md](NOTICE.md), y las licencias de terceros en `THIRD_PARTY_NOTICES.md`.

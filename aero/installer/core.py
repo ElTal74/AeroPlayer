@@ -93,12 +93,31 @@ def find_existing() -> Existing | None:
     return None
 
 
+def options_for_update(existing: Existing | None) -> Options:
+    """Opciones de una actualización automática: las mismas que eligió el usuario al instalar (carpeta, accesos
+    directos, menú del clic derecho, «Abrir con»). No se cambia el tema ni el idioma."""
+    from aero.core import associations, shellmenu
+
+    links = shortcut_paths()
+    target = existing.folder if existing is not None else default_dir()
+    try:
+        assoc = associations.is_registered()
+    except OSError:
+        assoc = True
+    try:
+        menu = shellmenu.is_registered()
+    except OSError:
+        menu = True
+    return Options(target=target, start_menu=links["programs"].exists() or existing is None,
+                   desktop=links["desktop"].exists(), context_menu=menu, associations=assoc)
+
+
 def write_uninstall_entry(folder: Path, version: str, size_bytes: int) -> None:
     w = _reg()
     exe = folder / EXE
     with w.CreateKeyEx(w.HKEY_CURRENT_USER, UNINSTALL_KEY, 0, w.KEY_SET_VALUE) as k:
         for name, value in (("DisplayName", APP_NAME), ("DisplayVersion", version),
-                            ("Publisher", "Proyecto AERO Player"), ("DisplayIcon", f"{exe},0"),
+                            ("Publisher", "David Seva Gonzalvez"), ("DisplayIcon", f"{exe},0"),
                             ("InstallLocation", str(folder)), ("UninstallString", f'"{exe}" --uninstall'),
                             ("QuietUninstallString", f'"{exe}" --uninstall --quiet'),
                             ("InstallDate", time.strftime("%Y%m%d"))):

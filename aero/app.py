@@ -44,7 +44,12 @@ def _diagnostico(path: str) -> int:
 
     nc = native.core()
     icons = icon_export.icons_dir()
+    import importlib.util
+
+    modules = {m: importlib.util.find_spec(f"PySide6.{m}") is not None
+               for m in ("QtPdf", "QtPdfWidgets", "QtMultimedia", "QtMultimediaWidgets")}
     data = {
+        "qt_modulos": modules, "qt_completo": all(modules.values()),
         "version": __version__, "python": platform.python_version(), "frozen": bool(getattr(sys, "frozen", False)),
         "nativo": nc is not None, "nativo_version": nc.version() if nc else "",
         "nativo_archivo": getattr(nc, "__file__", "") if nc else "",

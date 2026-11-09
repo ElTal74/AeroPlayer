@@ -1,4 +1,4 @@
-# Pruebas de AERO Player 2.2 (2026-11-08)
+# Pruebas de AERO Player 1.1.0 (2026-11-09)
 
 Entorno: Windows 11 Pro 26200, Python 3.14.3, PySide6 6.12.0, FFmpeg N-123074 (GPL), sin LibreOffice.
 Regla de honestidad: **A** = probado automáticamente · **R** = probado con entrada real de Windows o captura real
@@ -83,6 +83,27 @@ La trazabilidad completa (captura → causa → solución → prueba) está en
 | 16. Fluida y estable | A | 75 pruebas; tiempos de dibujo y CPU en `docs/AUDITORIA_v12.md` |
 
 **Total 1.2: 75 pruebas automáticas superadas.**
+
+## Versión pública 1.1.0 (2026-11-09)
+
+**289 pruebas automáticas superadas, 2 omitidas** (13 min 42 s en el escritorio oculto), `ruff` sin avisos y
+`i18n_keys --strict` con 1137/1137 textos en los 7 idiomas. Nuevas en `tests/test_v23.py`:
+
+| Área | Estado | Cómo |
+| --- | --- | --- |
+| Actualizador: versiones, última versión, descarga con SHA-256 (buena, mala, cancelada), cada cuánto mira | A | Servidor HTTP falso con la forma de la API de GitHub |
+| Diálogo de actualización: instalar, omitir versión, modo desarrollo, comprobación al arrancar | A | Prueba de interfaz |
+| `setup.exe --update` conserva accesos directos, menú y asociaciones | A | `options_for_update` y `setup_main` |
+| Portable: no se autoinstala, solo avisa | A | `is_portable` / `can_install` |
+| Esquinas redondeadas en las 21 ventanas | A + R | `tools/corner_audit.py` (DWM + alfa de las esquinas): 21/21 |
+| Temporizador de apagado (fundido y final de pista) | A | Prueba con tiempos cortos |
+| Novedades tras actualizar (solo tras actualizar, no en la primera instalación) | A | Prueba de interfaz |
+| Abrir varios archivos a la vez desde el clic derecho | A | 4/4 bajo carga tras el arreglo |
+| Actualizador real contra GitHub: detecta 1.1.0, descarga 95 MB y comprueba el SHA-256 (por la API con github.com caído) | R | Prueba manual |
+| Reintentos ante 504 y descarga por la API | A | Servidor falso que falla a propósito |
+| Visor sin QtPdf: fotos bien, PDF con aviso | A | Proceso aparte sin el módulo |
+| Ejecutable con QtPdf y QtMultimedia | A | `--diagnostico` → `qt_completo`, también en GitHub |
+| Web en 7 idiomas con capturas por idioma | R | Navegador: cambio de idioma, capturas, tabla en móvil (375 px) sin desbordes |
 
 ## Versión 2.2
 

@@ -43,6 +43,20 @@ class MediaBin(QListWidget):
         self.setIconSize(QSize(64, 36))
         self.setSpacing(2)
 
+    def paintEvent(self, e):
+        super().paintEvent(e)
+        if self.count():
+            return
+        from PySide6.QtGui import QColor, QPainter
+
+        from aero.ui.glass import tm
+
+        p = QPainter(self.viewport())
+        p.setPen(QColor(tm().theme.text2))
+        p.drawText(self.viewport().rect().adjusted(16, 0, -16, 0), Qt.AlignmentFlag.AlignCenter
+                   | Qt.TextFlag.TextWordWrap,
+                   tr("Importa vídeos, música e imágenes (o arrástralos aquí desde el Explorador)"))
+
     def startDrag(self, actions):
         it = self.currentItem()
         if it is None:

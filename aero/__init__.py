@@ -7,6 +7,9 @@ import os as _os
 for _var in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
     _os.environ.setdefault(_var, "1")
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 APP_NAME = "AERO Player"
 APP_ID = "AeroPlayer"
+AUTHOR = "David Seva Gonzalvez"
+COPYRIGHT = f"© 2026 {AUTHOR}"
+UPDATE_REPO = "ElTal74/AeroPlayer"     # GitHub: de aquí salen las versiones y las actualizaciones

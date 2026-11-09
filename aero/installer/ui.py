@@ -678,6 +678,71 @@ def main_install() -> int:
     return app.exec()
 
 
+def main_update() -> int:
+    """Actualización desde AERO Player (`setup.exe --update`): sin asistente, conservando las opciones de la
+    instalación y los datos; al terminar se vuelve a abrir AERO Player. Si algo falla, se abre el asistente."""
+    import threading
+
+    from PySide6.QtCore import QTimer
+    from PySide6.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
+
+    from aero.i18n import DEFAULT_LANGUAGE, set_language, tr
+
+    app = _app()
+    set_language(core.current_setting("language") or DEFAULT_LANGUAGE)
+    apply_theme(core.current_theme() or "burbuja")
+    payload = payload_dir()
+    if payload is None:
+        return main_install()
+    pl = core.Payload.load(payload)
+    opts = core.options_for_update(core.find_existing())
+    w = QWidget()
+    w.setWindowTitle(tr("Actualizando {app}", app=APP_NAME))
+    title = QLabel(tr("Actualizando {app} a la versión {v}…", app=APP_NAME, v=pl.version))
+    status = QLabel("")
+    bar = QProgressBar()
+    bar.setRange(0, 1000)
+    lay = QVBoxLayout(w)
+    lay.setContentsMargins(24, 22, 24, 22)
+    lay.addWidget(title)
+    lay.addWidget(bar)
+    lay.addWidget(status)
+    w.resize(460, 140)
+    w.show()
+    state = {"p": 0.0, "msg": "", "done": False, "error": None}
+
+    def work():
+        try:
+            core.install(pl, opts, lambda f, m: state.update(p=f, msg=m))
+        except Exception as e:  # noqa: BLE001 - cualquier fallo: se muestra el asistente completo
+            state["error"] = e
+        state["done"] = True
+
+    threading.Thread(target=work, daemon=True).start()
+    result = {"code": 0}
+
+    def tick():
+        bar.setValue(int(state["p"] * 1000))
+        status.setText(tr(state["msg"]) if state["msg"] else "")
+        if not state["done"]:
+            return
+        timer.stop()
+        w.close()
+        if state["error"] is not None:
+            result["code"] = 1
+            iw = InstallerWindow(payload)
+            iw.show()
+            return
+        core.run_app(opts.target, wait=False)          # se vuelve a abrir AERO Player, ya actualizado
+        app.quit()
+
+    timer = QTimer()
+    timer.timeout.connect(tick)
+    timer.start(100)
+    app.exec()
+    return result["code"]
+
+
 def main_uninstall(quiet: bool = False) -> int:
     from aero.i18n import DEFAULT_LANGUAGE, set_language
 

@@ -170,6 +170,12 @@ class Timeline(QWidget):
             path.lineTo(x, 9)
             path.closeSubpath()
             p.fillPath(path, QColor("#ff5a52"))
+        if not any(True for _ in self.project.all_clips()):
+            # Línea de tiempo vacía: se dice cómo empezar (en lugar de pistas en blanco)
+            area = QRectF(HEAD_W, RULER, W - HEAD_W, len(self.project.tracks) * TRACK_H)
+            p.setPen(QColor(170, 178, 194))
+            p.drawText(area, Qt.AlignmentFlag.AlignCenter,
+                       tr("Arrastra aquí los medios de la izquierda para empezar a montar tu vídeo"))
 
     def lock_rect(self, ti: int) -> QRectF:
         """Candado de la cabecera de la pista (bloquear o desbloquear)."""

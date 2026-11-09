@@ -75,6 +75,18 @@ class PlayerBar(GlassPanel):
         cl.addLayout(h_layout(self.pos_label, self.seek, self.dur_label, spacing=10))
 
         self.speed = IconButton("speed", tr("Velocidad de reproducción"), 18, button=34)
+        # Temporizador de apagado (dormirse con música o con una película)
+        from aero.player.sleep_timer import SleepTimer
+
+        self.sleep = SleepTimer(engine, self)
+        self.sleep_btn = IconButton("sleep", tr("Temporizador de apagado"), 18, checkable=True, button=34)
+        self.sleep_btn.setPopupMode(self.sleep_btn.ToolButtonPopupMode.InstantPopup)
+        self.sleep_menu = QMenu(self)
+        self.sleep_menu.aboutToShow.connect(self._build_sleep_menu)
+        self.sleep_btn.setMenu(self.sleep_menu)
+        self.sleep.changed.connect(self._sleep_changed)
+        self.sleep.fired.connect(lambda: self.window().notify(tr("Temporizador: reproducción detenida"), "info")
+                                 if hasattr(self.window(), "notify") else None)
         self.speed.setPopupMode(self.speed.ToolButtonPopupMode.InstantPopup)
         self.media_menu_btn = IconButton("subtitles", tr("Subtítulos y pistas de audio"), 18, button=34)
         self.media_menu_btn.setPopupMode(self.media_menu_btn.ToolButtonPopupMode.InstantPopup)
@@ -92,7 +104,7 @@ class PlayerBar(GlassPanel):
         self.edit_btn.clicked.connect(self._edit)
         self.edit_btn.hide()
         right = QWidget()
-        right.setLayout(h_layout(self.edit_btn, self.speed, self.media_menu_btn, self.viz, self.queue_btn, 6, self.vol_btn,
+        right.setLayout(h_layout(self.edit_btn, self.sleep_btn, self.speed, self.media_menu_btn, self.viz, self.queue_btn, 6, self.vol_btn,
                                  self.volume, self.full, spacing=2))
 
         lay = h_layout(left, center, right, spacing=18, margins=(14, 6, 14, 6))
@@ -137,6 +149,39 @@ class PlayerBar(GlassPanel):
         self._volume(engine.audio.volume(), engine.audio.isMuted())
         self._modes()
 
+
+    # ------------------------------------------------------------------ temporizador de apagado
+    def _build_sleep_menu(self):
+        from aero.player.sleep_timer import CHOICES
+
+        m = self.sleep_menu
+        m.clear()
+        off = m.addAction(tr("Desactivado"))
+        off.setCheckable(True)
+        off.setChecked(not self.sleep.active)
+        off.triggered.connect(lambda: self.sleep.cancel())
+        m.addSeparator()
+        for mins in CHOICES:
+            text = tr("{n} minutos", n=mins) if mins < 60 else (tr("1 hora") if mins == 60 else
+                                                                 tr("{h} h {m} min", h=mins // 60, m=mins % 60)
+                                                                 if mins % 60 else tr("{n} horas", n=mins // 60))
+            a = m.addAction(text)
+            a.triggered.connect(lambda _c=False, v=mins: self.sleep.start(v))
+        end = m.addAction(tr("Al terminar esta pista"))
+        end.setCheckable(True)
+        end.setChecked(self.sleep.end_of_track)
+        end.triggered.connect(self.sleep.start_end_of_track)
+
+    def _sleep_changed(self):
+        self.sleep_btn.setChecked(self.sleep.active)
+        rem = self.sleep.remaining()
+        if self.sleep.end_of_track:
+            tip = tr("Se detendrá al terminar esta pista")
+        elif rem is not None:
+            tip = tr("Se detendrá en {t}", t=f"{int(rem // 60)}:{int(rem % 60):02d}")
+        else:
+            tip = tr("Temporizador de apagado")
+        self.sleep_btn.setToolTip(tip)
     def _seek(self, v: int):
         self._seeking = False
         self.engine.seek(v)

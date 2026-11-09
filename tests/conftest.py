@@ -15,6 +15,7 @@ MEDIA = ROOT / "tests" / "media"
 def isolated_data(tmp_path, monkeypatch):
     """Cada prueba usa su propia carpeta de datos: nunca toca la configuración real del usuario."""
     monkeypatch.setenv("AERO_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("AERO_NO_UPDATES", "1")      # las pruebas nunca consultan GitHub por su cuenta
     yield
 
 
@@ -95,6 +96,12 @@ def controller(qapp, media):
     ctl = AppController(qapp, s, db)
     ctl.quit = lambda: None  # en pruebas no se cierra la aplicación de Qt
     yield ctl
+    from PySide6.QtCore import QThreadPool
+
+    if ctl.main is not None and "library" in ctl.main.pages:
+        ctl.main.pages["library"].stop_scan()
+    QThreadPool.globalInstance().waitForDone(5000)      # sin tareas a medias al cerrar (fallo intermitente)
+    qapp.processEvents()
     for w in list(ctl.media_windows):
         w.close()
     if ctl.main is not None:

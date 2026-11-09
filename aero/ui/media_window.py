@@ -117,6 +117,8 @@ class MediaWindow(GlassWindow):
         root = QVBoxLayout(self.backdrop)
         root.setContentsMargins(0, 0, 0, 0)
         root.addWidget(self.stack)
+        # Al cambiar de contenido (foto, vídeo con su superficie nativa…) se vuelve a recortar con esquinas redondas
+        self.stack.currentChanged.connect(lambda _i: QTimer.singleShot(0, self._round_content))
 
         # Capa de controles: ventana transparente propia encima del contenido. El vídeo de Qt usa una
         # superficie nativa (GPU) que taparía a cualquier widget hermano; una ventana superpuesta no.
@@ -692,6 +694,27 @@ class MediaWindow(GlassWindow):
     def resizeEvent(self, e):
         super().resizeEvent(e)
         self._layout_overlays()
+        self._round_content()
+
+    def _round_content(self) -> None:
+        """Esquinas redondeadas también en el contenido. La ventana es «layered»: Windows 11 no la redondea y
+        la imagen o el vídeo llenaban el rectángulo entero, así que las esquinas se veían cuadradas. Se recorta
+        el contenido (y la superficie nativa del vídeo, que es otra ventana) con el mismo radio que el cristal.
+        A pantalla completa o maximizada, recto, como en Windows."""
+        from PySide6.QtCore import QRectF
+        from PySide6.QtGui import QPainterPath, QRegion
+
+        square = self.isFullScreen() or self.isMaximized()
+        targets = [self.stack] + [w for w in self.stack.findChildren(QWidget)
+                                  if w.testAttribute(Qt.WidgetAttribute.WA_NativeWindow)]
+        for w in targets:
+            if square or w.width() <= 0:
+                w.clearMask()
+                continue
+            path = QPainterPath()
+            top_left = w.mapTo(self, w.rect().topLeft())
+            path.addRoundedRect(QRectF(-top_left.x(), -top_left.y(), self.width(), self.height()), RADIUS, RADIUS)
+            w.setMask(QRegion(path.toFillPolygon().toPolygon()))
 
     def moveEvent(self, e):
         super().moveEvent(e)
@@ -701,6 +724,7 @@ class MediaWindow(GlassWindow):
     def showEvent(self, e):
         super().showEvent(e)
         QTimer.singleShot(0, self._layout_overlays)
+        QTimer.singleShot(0, self._round_content)
 
     def hideEvent(self, e):
         super().hideEvent(e)
@@ -713,6 +737,7 @@ class MediaWindow(GlassWindow):
                 self.overlay.hide()
             else:
                 QTimer.singleShot(0, self._layout_overlays)
+                QTimer.singleShot(0, self._round_content)
 
     def _fade_to(self, value: float):
         self._fade.stop()

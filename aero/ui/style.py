@@ -50,6 +50,9 @@ def paint_glass_button(p: QPainter, rect, *, hover=False, pressed=False, checked
     path = rounded(r, radius)
     p.save()
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    if not enabled:
+        p.setOpacity(p.opacity() * 0.45)        # desactivado: se nota que no se puede pulsar
+        hover = pressed = False
     if kind == "flat" and not (hover or pressed or checked):
         if focus:
             p.setPen(QPen(_a(t.accent, 0.9), 1))

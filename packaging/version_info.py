@@ -12,11 +12,12 @@ TEMPLATE = """VSVersionInfo(
                     fileType=0x1, subtype=0x0, date=(0, 0)),
   kids=[
     StringFileInfo([StringTable('0C0A04B0', [
-      StringStruct('CompanyName', 'Proyecto AERO Player'),
+      StringStruct('CompanyName', 'David Seva Gonzalvez'),
       StringStruct('FileDescription', '{desc}'),
       StringStruct('FileVersion', '{ver}'),
       StringStruct('InternalName', '{internal}'),
-      StringStruct('LegalCopyright', 'GPL-3.0-or-later'),
+      StringStruct('LegalCopyright', '© 2026 David Seva Gonzalvez. GPL-3.0-or-later'),
+      StringStruct('LegalTrademarks', 'AERO Player es un nombre de David Seva Gonzalvez'),
       StringStruct('OriginalFilename', '{filename}'),
       StringStruct('ProductName', 'AERO Player'),
       StringStruct('ProductVersion', '{ver}')])]),

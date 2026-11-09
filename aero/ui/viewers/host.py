@@ -21,7 +21,20 @@ from aero.ui.glass import IconButton, Spinner, h_layout, label, tm, v_layout
 from aero.ui.viewers.doc_viewers import (PresentationWindow, RichViewer, SheetViewer, SlidesViewer,
                                         TextViewer, load_sheets, prepare_rich_html, render_pptx)
 from aero.ui.viewers.image_viewer import ImageViewer, load_qimage
-from aero.ui.viewers.pdf_viewer import PdfViewer
+try:
+    from aero.ui.viewers.pdf_viewer import PdfViewer
+except ImportError:                     # sin QtPdf solo fallan los PDF, no todo el visor (pasó en una compilación)
+    class PdfViewer(QWidget):  # type: ignore[no-redef]
+        def __init__(self):
+            super().__init__()
+            self.toolbar = QWidget()
+            self.toolbar.setLayout(h_layout())
+
+        def load(self, path: str):
+            raise RuntimeError(tr("Esta copia de AERO Player no incluye el visor PDF. Usa «Abrir con…»."))
+
+        def unload(self):
+            pass
 
 from aero.ui.icons import KIND_ICONS  # noqa: E402,F401 - reexportado
 from aero.i18n import tr

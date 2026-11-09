@@ -35,12 +35,18 @@ if ($LASTEXITCODE -ne 0) { Write-Host "   Sin núcleo nativo (Rust no disponible
 & $py -c "from aero.core import native; import sys; sys.exit(0 if native.available() else 1)"
 if ($LASTEXITCODE -eq 0) { Write-Host "   Núcleo nativo: sí" } else { Write-Host "   Núcleo nativo: no" -ForegroundColor Yellow }
 
+# Módulos de Qt imprescindibles: sin ellos el paquete saldría sin visor PDF y nadie lo notaría al compilar.
+& $py -c "import PySide6.QtPdf, PySide6.QtPdfWidgets, PySide6.QtMultimedia"
+if ($LASTEXITCODE -ne 0) { throw "Falta un módulo de Qt (QtPdf / QtMultimedia): instala requirements.txt." }
+
 Write-Host "2/6 Icono" -ForegroundColor Cyan
 & $py packaging\make_icon.py
 
 Write-Host "3/6 PyInstaller (programa)" -ForegroundColor Cyan
 & $py -m PyInstaller packaging\aero.spec --noconfirm --clean --distpath dist --workpath build
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller falló." }
+& powershell -NoProfile -ExecutionPolicy Bypass -File packaging\sign.ps1 -Files "dist\AeroPlayer\AeroPlayer.exe"
+if ($LASTEXITCODE -ne 0) { throw "La firma del programa falló." }
 
 if ($BundleFFmpeg) {
     $bin = Join-Path $root "dist\AeroPlayer\bin"
@@ -60,6 +66,8 @@ Write-Host "5/6 Instalador propio" -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) { throw "No se pudo crear el paquete del instalador." }
 & $py -m PyInstaller packaging\setup.spec --noconfirm --clean --distpath dist --workpath build\setup
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller (instalador) falló." }
+& powershell -NoProfile -ExecutionPolicy Bypass -File packaging\sign.ps1 -Files "dist\AeroPlayer-$version-setup.exe"
+if ($LASTEXITCODE -ne 0) { throw "La firma del instalador falló." }
 
 Write-Host "6/6 Checksums" -ForegroundColor Cyan
 Get-ChildItem dist -File | Where-Object { $_.Name -like "AeroPlayer-$version-*" } | ForEach-Object {

@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aero-player"
-version = "1.0.0"
+version = "1.1.0"
+authors = [{ name = "David Seva Gonzalvez" }]
 description = "Reproductor multimedia, visor universal y conversor de archivos con estética Frutiger Aero"
 readme = "README.md"
 license = "GPL-3.0-or-later"

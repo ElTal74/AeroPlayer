@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 
 from PySide6.QtCore import QObject, QTimer
 from PySide6.QtGui import QAction, QIcon
@@ -203,8 +204,22 @@ class AppController(QObject):
         if not getattr(self, "_recovery_checked", False):
             # Trabajo sin guardar de una sesión que se cerró de golpe: se ofrece recuperarlo una vez por inicio.
             self._recovery_checked = True
-            QTimer.singleShot(900, self._offer_recovery)
+            # Atados a la ventana: si se cierra antes de que salten, no se ejecutan (con una ventana ya destruida
+            # como padre del diálogo, Qt fallaba de forma intermitente).
+            QTimer.singleShot(900, self.main, self._offer_recovery)
+            # Versiones nuevas en GitHub (en segundo plano, como mucho una vez al día, desactivable en Ajustes)
+            QTimer.singleShot(8000, self.main, self._check_updates)
         return self.main
+
+    def _check_updates(self) -> None:
+        from aero.ui.update_ui import startup_check, whats_new
+
+        if self.main is None:
+            return
+        whats_new(self)                      # tras actualizar: «Novedades de la versión…» (una sola vez)
+        if os.environ.get("AERO_NO_UPDATES"):
+            return
+        startup_check(self)
 
     def _offer_recovery(self) -> None:
         from aero.ui.recovery import offer
@@ -360,11 +375,38 @@ class AppController(QObject):
         if immediate:
             self._do_action(action, paths)
             return
+        if not self._pending_actions:
+            self._actions_since = time.monotonic()
         pend = self._pending_actions.setdefault(action, [])
         pend.extend(p for p in paths if p not in pend)
         self._action_timer.start()
 
+    @staticmethod
+    def _siblings_starting(actions) -> bool:
+        """¿Hay otros procesos de AERO Player arrancando con la misma acción? (el Explorador lanza uno por
+        archivo y, con el equipo cargado, pueden tardar segundos en llegar)."""
+        try:
+            import psutil
+        except ImportError:
+            return False
+        me = os.getpid()
+        try:
+            for proc in psutil.process_iter(["pid", "cmdline"]):
+                if proc.info["pid"] == me:
+                    continue
+                cmd = proc.info.get("cmdline") or []
+                if "--action" in cmd and any(a in cmd for a in actions) and any("aero" in c.lower() for c in cmd):
+                    return True
+        except (psutil.Error, OSError):
+            return False
+        return False
+
     def _flush_actions(self) -> None:
+        # Se espera a los archivos que aún vienen de camino (máximo 12 s) para comprimir o convertir todo junto
+        if self._pending_actions and time.monotonic() - getattr(self, "_actions_since", 0) < 12                 and self._siblings_starting(list(self._pending_actions)):
+            self._action_timer.start(250)
+            return
+        self._action_timer.setInterval(600)
         pending, self._pending_actions = self._pending_actions, {}
         for action, paths in pending.items():
             try:

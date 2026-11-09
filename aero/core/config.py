@@ -67,6 +67,10 @@ DEFAULTS: dict = {
     "visualizer_color": "#8fe3ff",
     "visualizer_fullscreen": False,
     "quicklook_visualizer": True,
+    "update_check": True,            # buscar versiones nuevas en GitHub al iniciar (como mucho una vez al día)
+    "update_last_check": 0.0,
+    "update_skip": "",               # versión que el usuario decidió omitir
+    "seen_version": "",              # última versión cuyas novedades vio el usuario («Novedades» tras actualizar)
     "photos_in_main": True,          # las fotos abiertas desde Windows van al visor de la ventana principal
     "assoc_version": 0,              # versión del registro de asociaciones de AERO (2 = iconos por categoría)
     "explorer_icons_foreign": False, # iconos AERO también en tipos que abren otros programas (lo activa el usuario)

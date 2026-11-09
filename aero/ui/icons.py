@@ -70,6 +70,7 @@ PATHS: dict[str, str] = {
     "subtitles": f'<rect {_S} x="3" y="5" width="18" height="14" rx="2.5"/><path {_S} d="M6.5 12.5h4M13 12.5h4.5M6.5 15.5h7M15.5 15.5h2"/>',
     "audio_track": f'<path {_S} d="M4 12h2M8 8v8M12 5v14M16 9v6M20 11v2"/>',
     "speed": f'<path {_S} d="M4.5 16a7.5 7.5 0 1 1 15 0"/><path {_S} d="m12 16 4-5"/>',
+    "sleep": f'<path {_S} d="M19.5 14.2A7.8 7.8 0 1 1 9.8 4.5a6.3 6.3 0 0 0 9.7 9.7z"/><path {_S} d="M15 5h3l-3 3.5h3"/>',
     "menu": f'<path {_S} d="M4 7h16M4 12h16M4 17h16"/>',
     "more": f'<circle {_F} cx="6" cy="12" r="1.6"/><circle {_F} cx="12" cy="12" r="1.6"/><circle {_F} cx="18" cy="12" r="1.6"/>',
     "eye": f'<path {_S} d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle {_S} cx="12" cy="12" r="3"/>',

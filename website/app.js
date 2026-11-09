@@ -1,129 +1,244 @@
-// AERO Player — web: burbujas, idioma, capturas, enlaces de descarga desde GitHub Releases.
+// AERO Player — web: idiomas, capturas por idioma, burbujas, parallax, animaciones y descargas desde GitHub.
 (function () {
   "use strict";
   var cfg = window.AERO_SITE || {};
+  var I18N = window.AERO_I18N || {};
+  var LANGS = window.AERO_LANGS || { es: "Español" };
+  var NAMES = window.AERO_SHOT_NAMES || {};
   var repoUrl = "https://github.com/" + cfg.owner + "/" + cfg.repo;
   var configured = cfg.owner && cfg.owner.indexOf("TU_USUARIO") !== 0;
-
-  // ------------------------------------------------------------ burbujas (respetan «reducir movimiento»)
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var box = document.getElementById("bubbles");
-  if (box && !reduce) {
-    var n = window.innerWidth < 700 ? 10 : 22;
-    for (var i = 0; i < n; i++) {
-      var b = document.createElement("span");
-      var size = 18 + Math.random() * 70;
-      b.className = "bubble";
-      b.style.width = b.style.height = size + "px";
-      b.style.left = Math.random() * 100 + "%";
-      b.style.animationDuration = 14 + Math.random() * 22 + "s";
-      b.style.animationDelay = -Math.random() * 30 + "s";
-      b.style.setProperty("--sway", (Math.random() * 80 - 40).toFixed(0) + "px");
-      box.appendChild(b);
-    }
-  }
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  // ------------------------------------------------------------ idioma (español / inglés)
-  var EN = {
-    "nav.features": "Features", "nav.shots": "Screenshots", "nav.download": "Download", "nav.faq": "FAQ",
-    "hero.tagline": "Your music, videos and files, with the glass, sky and bubbles of Windows 7.",
-    "hero.sub": "Player, universal viewer, editors, converter and much more. Free, open source and no telemetry.",
-    "hero.download": "Download for Windows", "hero.source": "View the code on GitHub",
-    "feat.title": "Everything in one app",
-    "feat.player.t": "Player", "feat.player.d": "Music and video with a queue, subtitles, audio tracks, series with next episode and 11 visualizers that follow the real sound.",
-    "feat.viewer.t": "Universal viewer", "feat.viewer.d": "Photos (HEIC and AVIF too), PDF, documents, spreadsheets, presentations, archives and disc images. Quick Look with Space from File Explorer.",
-    "feat.editors.t": "Editors", "feat.editors.d": "Video editor with a timeline and effects, image editor with layers, AERO Paint, documents, spreadsheets, presentations and PDF to editable with OCR.",
-    "feat.files.t": "Files", "feat.files.d": "File browser with the AERO icon family, lightning-fast global search, and nothing runs without your confirmation.",
-    "feat.archive.t": "Compress and extract", "feat.archive.d": "ZIP, 7Z, RAR, TAR and ISO with AES-256 passwords, protection against dangerous paths and clean cancellation.",
-    "feat.disc.t": "Disc images", "feat.disc.d": "Browse and extract ISO, IMG, BIN/CUE, NRG and MDF without mounting, or mount them with Windows whenever you want.",
-    "feat.torrent.t": "BitTorrent downloads", "feat.torrent.d": "See the contents, pick files and download. Nothing starts on its own, nothing runs and no ports are opened. Can be turned off.",
-    "feat.convert.t": "Batch converter", "feat.convert.d": "Images, audio, video and documents with profiles, pause and retry, never touching your originals.",
-    "feat.windows.t": "Built into Windows", "feat.windows.d": "“Open with”, AERO icons in File Explorer, right-click menu and default apps, always with your permission.",
-    "shots.title": "Screenshots",
-    "perf.title": "Light and fast", "perf.d": "The parts that work hardest with thousands of files are written in Rust and use every CPU core without freezing the window.",
-    "perf.n3": "2.9×", "perf.tags": "faster reading your music tags", "perf.scan": "faster scanning your library", "perf.search": "faster searching your whole disk", "perf.idle": "CPU when idle",
-    "priv.title": "Truly yours", "priv.1": "No telemetry, no ads, no accounts.", "priv.2": "Open source (GPL-3.0): you can read and improve the code.",
-    "priv.3": "It never moves, copies or changes your files without asking.", "priv.4": "The installer doesn't need administrator rights.",
-    "priv.5": "In 7 languages: English, Spanish, German, Italian, Portuguese, Russian and Chinese.",
-    "dl.title": "Download AERO Player", "dl.sub": "For 64-bit Windows 10 and Windows 11.",
-    "dl.setup": "Installer", "dl.setup.d": "Recommended. Creates shortcuts and updates keeping your data.",
-    "dl.portable": "Portable (ZIP)", "dl.portable.d": "Unzip and run AeroPlayer.exe. Installs nothing.",
-    "dl.smartscreen": "The first time, Windows SmartScreen may warn you because the app isn't digitally signed yet: click “More info” › “Run anyway”. You can verify the file with the SHA-256 checksums on the release page.",
-    "dl.all": "All releases and release notes", "dl.ffmpeg": "Converting video and audio requires FFmpeg (playback works without it).",
-    "faq.title": "Frequently asked questions",
-    "faq.q1": "Is it free?", "faq.a1": "Yes, completely. It's open source under the GPL-3.0 license: no ads, no subscriptions and no data collection.",
-    "faq.q2": "Does it change my default apps?", "faq.a2": "Not on its own. AERO Player adds itself to “Open with” and you choose in Windows Settings whether to use it by default.",
-    "faq.q3": "Why does SmartScreen warn me?", "faq.a3": "Because the executable isn't signed with a paid certificate yet. The code is public and every release publishes its SHA-256 checksums so you can verify it.",
-    "faq.q4": "How do I uninstall it?", "faq.a4": "From Windows Settings › Apps › AERO Player. Your files are not touched.",
-    "faq.q5": "Can I help or report a bug?", "faq.a5": "Of course! Open an issue on GitHub or suggest changes with a pull request.",
-    "foot.1": "AERO Player is free software under the GPL-3.0-or-later license.",
-    "foot.2": "Inspired by the Frutiger Aero aesthetic. Not affiliated with Microsoft. Windows is a trademark of Microsoft Corporation."
-  };
+  // ------------------------------------------------------------ idioma
   var ES = {};
-  document.querySelectorAll("[data-i18n]").forEach(function (el) { ES[el.dataset.i18n] = el.textContent; });
-  var lang = "es";
-  try { lang = localStorage.getItem("aero-lang") || ""; } catch (e) { lang = ""; }
-  if (!lang) lang = (navigator.language || "es").toLowerCase().indexOf("es") === 0 ? "es" : "en";
+  $$("[data-i18n]").forEach(function (el) { ES[el.dataset.i18n] = el.textContent; });
+  function pickLang() {
+    var saved = "";
+    try { saved = localStorage.getItem("aero-lang") || ""; } catch (e) { saved = ""; }
+    if (LANGS[saved]) return saved;
+    var nav = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "es"]);
+    for (var i = 0; i < nav.length; i++) {
+      var c = String(nav[i]).toLowerCase().slice(0, 2);
+      if (LANGS[c]) return c;
+    }
+    return "en";
+  }
+  var lang = pickLang();
+  var sel = $("#lang");
+  Object.keys(LANGS).forEach(function (k) {
+    var o = document.createElement("option");
+    o.value = k; o.textContent = LANGS[k];
+    sel.appendChild(o);
+  });
+  function t(key) { return lang === "es" ? ES[key] : ((I18N[lang] || {})[key] || (I18N.en || {})[key] || ES[key]); }
 
-  var SHOTS = [
-    ["inicio", "Inicio", "Home"], ["reproductor", "Reproductor", "Player"], ["biblioteca", "Biblioteca", "Library"],
-    ["archivos", "Archivos", "Files"], ["visor", "Visor", "Viewer"], ["editor_video", "Editor de vídeo", "Video editor"],
-    ["paint", "AERO Paint", "AERO Paint"], ["conversor", "Conversor", "Converter"], ["tema_naturaleza", "Temas", "Themes"]
-  ];
-  var tabs = document.getElementById("shot-tabs"), img = document.getElementById("shot-img"), title = document.getElementById("shot-title");
-  var current = 0;
-  function showShot(i) {
-    current = i;
-    img.src = "assets/capturas/" + SHOTS[i][0] + ".png";
-    img.alt = "AERO Player — " + SHOTS[i][lang === "es" ? 1 : 2];
-    title.textContent = "AERO Player — " + SHOTS[i][lang === "es" ? 1 : 2];
-    tabs.querySelectorAll(".tab").forEach(function (t, k) { t.setAttribute("aria-selected", k === i ? "true" : "false"); });
+  // ------------------------------------------------------------ capturas (en el idioma de la página)
+  var SHOTS = ["inicio", "reproductor", "biblioteca", "archivos", "visor", "editor_video", "paint", "conversor", "tema_naturaleza"];
+  var tabs = $("#shot-tabs"), img = $("#shot-img"), img2 = $("#shot-img2"), title = $("#shot-title"), dots = $("#shot-dots");
+  var current = 0, timer = null, paused = false;
+  function shotSrc(name) { return "assets/capturas/" + lang + "/" + name + ".png"; }
+  function shotName(name) { return (NAMES[name] || {})[lang] || (NAMES[name] || {}).en || name; }
+  function showShot(i, animate) {
+    current = (i + SHOTS.length) % SHOTS.length;
+    var name = SHOTS[current], src = shotSrc(name);
+    title.textContent = "AERO Player — " + shotName(name);
+    img.alt = "AERO Player — " + shotName(name);
+    if (animate && !reduce) {
+      img2.src = src;
+      img2.onload = function () {
+        img2.classList.add("show");
+        setTimeout(function () { img.src = src; img2.classList.remove("show"); }, 520);
+      };
+    } else {
+      img.src = src;
+      img2.onload = null;
+      img2.src = src;          // la capa del fundido siempre en el idioma actual
+    }
+    $$(".tab", tabs).forEach(function (b, k) { b.setAttribute("aria-selected", k === current ? "true" : "false"); });
+    $$("i", dots).forEach(function (d, k) { d.classList.toggle("on", k === current); });
   }
   function buildTabs() {
-    tabs.innerHTML = "";
+    tabs.innerHTML = ""; dots.innerHTML = "";
     SHOTS.forEach(function (s, i) {
-      var t = document.createElement("button");
-      t.type = "button"; t.className = "tab"; t.setAttribute("role", "tab");
-      t.textContent = s[lang === "es" ? 1 : 2];
-      t.addEventListener("click", function () { showShot(i); });
-      tabs.appendChild(t);
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "tab"; b.setAttribute("role", "tab");
+      b.textContent = shotName(s);
+      b.addEventListener("click", function () { showShot(i, true); restart(); });
+      tabs.appendChild(b);
+      dots.appendChild(document.createElement("i"));
     });
-    showShot(current);
+    showShot(current, false);
   }
+  function restart() {
+    if (reduce) return;
+    clearInterval(timer);
+    timer = setInterval(function () { if (!paused && !document.hidden) showShot(current + 1, true); }, 5200);
+  }
+  var frame = $("#shot-frame");
+  frame.addEventListener("mouseenter", function () { paused = true; });
+  frame.addEventListener("mouseleave", function () { paused = false; });
+  document.addEventListener("keydown", function (e) {
+    var r = frame.getBoundingClientRect();
+    if (r.top > window.innerHeight || r.bottom < 0) return;
+    if (e.key === "ArrowRight") { showShot(current + 1, true); restart(); }
+    if (e.key === "ArrowLeft") { showShot(current - 1, true); restart(); }
+  });
 
   function applyLang() {
     document.documentElement.lang = lang;
-    document.querySelectorAll("[data-i18n]").forEach(function (el) {
-      var k = el.dataset.i18n;
-      el.textContent = lang === "en" ? (EN[k] || ES[k]) : ES[k];
-    });
-    document.getElementById("lang").textContent = lang === "es" ? "EN" : "ES";
+    sel.value = lang;
+    $$("[data-i18n]").forEach(function (el) { el.textContent = t(el.dataset.i18n); });
+    $$("[data-shot]").forEach(function (el) { el.src = shotSrc(el.dataset.shot); });
+    var bubbleTip = t("bubble.tip");
+    if (bubbleTip) $("#bubbles").title = bubbleTip;
     buildTabs();
     renderRelease();
   }
-  document.getElementById("lang").addEventListener("click", function () {
-    lang = lang === "es" ? "en" : "es";
+  sel.addEventListener("change", function () {
+    lang = sel.value;
     try { localStorage.setItem("aero-lang", lang); } catch (e) { /* sin almacenamiento: solo esta visita */ }
     applyLang();
   });
 
+  // ------------------------------------------------------------ burbujas que suben y se pueden explotar
+  var box = $("#bubbles");
+  function makeBubble(initial) {
+    var b = document.createElement("span");
+    var size = 16 + Math.random() * 64;
+    b.className = "bubble";
+    b.style.width = b.style.height = size + "px";
+    b.style.left = Math.random() * 100 + "%";
+    b.style.animationDuration = 16 + Math.random() * 22 + "s";
+    b.style.animationDelay = (initial ? -Math.random() * 30 : 0) + "s";
+    b.style.setProperty("--sway", (Math.random() * 80 - 40).toFixed(0) + "px");
+    b.addEventListener("click", function (e) { pop(b, e); });
+    b.addEventListener("animationiteration", function () { b.style.left = Math.random() * 100 + "%"; });
+    box.appendChild(b);
+  }
+  function pop(b, e) {
+    var r = b.getBoundingClientRect();
+    for (var i = 0; i < 10; i++) {
+      var p = document.createElement("span");
+      p.className = "droplet";
+      p.style.left = r.left + r.width / 2 + "px";
+      p.style.top = r.top + r.height / 2 + "px";
+      var a = (Math.PI * 2 * i) / 10, d = 24 + Math.random() * r.width * 0.6;
+      p.style.setProperty("--dx", Math.cos(a) * d + "px");
+      p.style.setProperty("--dy", Math.sin(a) * d + "px");
+      document.body.appendChild(p);
+      setTimeout(function (n) { return function () { n.remove(); }; }(p), 700);
+    }
+    b.remove();
+    setTimeout(function () { makeBubble(false); }, 1500 + Math.random() * 2500);
+    if (e) e.stopPropagation();
+  }
+  if (!reduce) {
+    var n = window.innerWidth < 700 ? 10 : 20;
+    for (var i = 0; i < n; i++) makeBubble(true);
+  }
+
+  // ------------------------------------------------------------ césped que se mece
+  var grass = $("#grass");
+  if (grass) {
+    var blades = window.innerWidth < 700 ? 40 : 90;
+    for (var g = 0; g < blades; g++) {
+      var s = document.createElement("i");
+      s.style.left = (g / blades) * 100 + Math.random() * 1.2 + "%";
+      s.style.height = 10 + Math.random() * 22 + "px";
+      s.style.animationDelay = -Math.random() * 4 + "s";
+      s.style.animationDuration = 3 + Math.random() * 2.5 + "s";
+      grass.appendChild(s);
+    }
+  }
+
+  // ------------------------------------------------------------ parallax (scroll y ratón)
+  var layers = $$("[data-depth]");
+  var mx = 0, my = 0, ticking = false;
+  function parallax() {
+    ticking = false;
+    var y = window.scrollY;
+    layers.forEach(function (el) {
+      var d = parseFloat(el.dataset.depth);
+      el.style.transform = "translate3d(" + (mx * d * 60).toFixed(1) + "px," + (-y * d + my * d * 30).toFixed(1) + "px,0)";
+    });
+  }
+  if (!reduce) {
+    window.addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
+    window.addEventListener("mousemove", function (e) {
+      mx = e.clientX / window.innerWidth - 0.5; my = e.clientY / window.innerHeight - 0.5;
+      if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
+    }, { passive: true });
+  }
+
+  // ------------------------------------------------------------ aparecer al hacer scroll + contadores
+  function countUp(el) {
+    var to = parseFloat(el.dataset.to), suffix = el.dataset.suffix || "", start = null;
+    if (reduce || !to) { el.textContent = to + suffix; return; }
+    function step(ts) {
+      if (start === null) start = ts;
+      var k = Math.min(1, (ts - start) / 1100);
+      var v = Math.round(to * (1 - Math.pow(1 - k, 3)));
+      el.textContent = v + suffix;
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var el = en.target;
+        el.classList.add("in");
+        $$(".count", el).forEach(countUp);
+        io.unobserve(el);
+      });
+    }, { threshold: 0.12 });
+    $$(".reveal").forEach(function (el, k) {
+      var parent = el.parentElement;
+      var sibs = parent ? $$(":scope > .reveal", parent) : [el];
+      el.style.setProperty("--d", (sibs.indexOf(el) * 70) + "ms");
+      io.observe(el);
+    });
+  } else {
+    $$(".reveal").forEach(function (el) { el.classList.add("in"); });
+  }
+
+  // ------------------------------------------------------------ tarjetas con inclinación 3D y brillo
+  if (!reduce && window.matchMedia("(hover: hover)").matches) {
+    $$(".tilt").forEach(function (c) {
+      c.addEventListener("mousemove", function (e) {
+        var r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        c.style.transform = "perspective(800px) rotateX(" + ((0.5 - y) * 8).toFixed(2) + "deg) rotateY(" + ((x - 0.5) * 10).toFixed(2) + "deg) translateY(-4px)";
+        c.style.setProperty("--gx", (x * 100).toFixed(1) + "%");
+        c.style.setProperty("--gy", (y * 100).toFixed(1) + "%");
+      });
+      c.addEventListener("mouseleave", function () { c.style.transform = ""; });
+    });
+  }
+
   // ------------------------------------------------------------ capturas a pantalla completa
-  var lb = document.getElementById("lightbox");
-  document.querySelectorAll(".win7 img").forEach(function (im) {
+  var lb = $("#lightbox");
+  $$(".win7 img").forEach(function (im) {
     im.addEventListener("click", function () { lb.querySelector("img").src = im.src; lb.hidden = false; });
   });
   lb.addEventListener("click", function () { lb.hidden = true; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") lb.hidden = true; });
 
   // ------------------------------------------------------------ enlaces de GitHub y de descarga
-  document.querySelectorAll("[data-gh-link]").forEach(function (a) { a.href = configured ? repoUrl : "#"; });
-  document.querySelectorAll("[data-gh-releases]").forEach(function (a) { a.href = configured ? repoUrl + "/releases" : "#"; });
+  $$("[data-gh-link]").forEach(function (a) { a.href = configured ? repoUrl : "#"; });
+  $$("[data-gh-releases]").forEach(function (a) { a.href = configured ? repoUrl + "/releases" : "#"; });
   var release = null;
   function mb(bytes) { return (bytes / 1048576).toFixed(0) + " MB"; }
+  var VERSION_WORD = { es: "Versión", en: "Version", de: "Version", it: "Versione", pt: "Versão", ru: "Версия", zh: "版本" };
+  var PLATFORM = { es: "Windows 10 y 11 · 64 bits", en: "Windows 10 and 11 · 64-bit", de: "Windows 10 und 11 · 64 Bit",
+                   it: "Windows 10 e 11 · 64 bit", pt: "Windows 10 e 11 · 64 bits", ru: "Windows 10 и 11 · 64 бит", zh: "Windows 10 和 11 · 64 位" };
+  var SOON = { es: "Próximamente en GitHub Releases", en: "Coming soon on GitHub Releases", de: "Bald auf GitHub Releases",
+               it: "Presto su GitHub Releases", pt: "Em breve no GitHub Releases", ru: "Скоро на GitHub Releases", zh: "即将在 GitHub Releases 发布" };
   function renderRelease() {
     var v = release ? release.tag_name.replace(/^v/, "") : cfg.version;
-    var line = (lang === "es" ? "Versión " : "Version ") + v + (lang === "es" ? " · Windows 10 y 11 · 64 bits" : " · Windows 10 and 11 · 64-bit");
-    document.querySelectorAll("[data-version-line]").forEach(function (el) { el.textContent = line; });
+    $$("[data-version-line]").forEach(function (el) { el.textContent = (VERSION_WORD[lang] || "Version") + " " + v + " · " + (PLATFORM[lang] || PLATFORM.en); });
     var assets = { setup: null, portable: null };
     if (release) {
       release.assets.forEach(function (a) {
@@ -132,22 +247,17 @@
       });
     }
     ["setup", "portable"].forEach(function (k) {
-      var a = assets[k];
-      var fallback = configured ? repoUrl + "/releases/latest" : "#descargar";
-      document.querySelectorAll('[data-download="' + k + '"]').forEach(function (el) {
-        if (el.classList.contains("btn-aero") && !a) { el.href = configured ? fallback : "#descargar"; return; }
-        el.href = a ? a.browser_download_url : fallback;
-      });
-      document.querySelectorAll('[data-size="' + k + '"]').forEach(function (el) {
-        el.textContent = a ? a.name + " · " + mb(a.size) : (lang === "es" ? "Próximamente en GitHub Releases" : "Coming soon on GitHub Releases");
-      });
+      var a = assets[k], fallback = configured ? repoUrl + "/releases/latest" : "#descargar";
+      $$('[data-download="' + k + '"]').forEach(function (el) { el.href = a ? a.browser_download_url : fallback; });
+      $$('[data-size="' + k + '"]').forEach(function (el) { el.textContent = a ? a.name + " · " + mb(a.size) : (SOON[lang] || SOON.en); });
     });
   }
   if (configured && window.fetch) {
-    fetch("https://api.github.com/repos/" + cfg.owner + "/" + cfg.repo + "/releases/latest")
+    fetch("https://api.github.com/repos/" + cfg.owner + "/" + cfg.repo + "/releases/latest", { cache: "no-store" })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) { if (j && j.assets) { release = j; renderRelease(); } })
       .catch(function () { /* sin conexión con la API: quedan los enlaces a /releases/latest */ });
   }
   applyLang();
+  restart();
 })();

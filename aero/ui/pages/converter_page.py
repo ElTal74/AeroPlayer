@@ -18,7 +18,7 @@ from aero.core.converter import ACTIVE, DONE, ERROR, CANCELLED, PAUSED, Conversi
 from aero.core.formats import KIND_LABELS, human_size, human_time, kind_of
 from aero.ui import icons
 from aero.ui.glass import GlassPanel, IconButton, h_layout, label, tm, v_layout
-from aero.i18n import tr
+from aero.i18n import ntr, tr
 
 KIND_GROUP = {"image": "image", "audio": "audio", "video": "video", "pdf": "pdf", "document": "document",
               "text": "document", "sheet": "sheet", "slides": "slides"}
@@ -60,7 +60,8 @@ class DropList(QListWidget):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.setIconSize(QSize(18, 18))
+        self.setIconSize(QSize(32, 32))
+        self.setSpacing(2)
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasUrls():
@@ -92,7 +93,48 @@ class DropList(QListWidget):
             p.drawPixmap(r.center().x() - 20, r.center().y() - 46, pm)
             p.setPen(QColor(t.text))
             p.drawText(r.adjusted(0, 20, 0, 0), Qt.AlignmentFlag.AlignCenter,
-                       "Suelta archivos aquí")
+                       tr("Suelta aquí fotos, música, vídeos o documentos") + "\n"
+                       + tr("o usa «Archivos» y «Carpeta»"))
+
+
+class QueueTable(QTableWidget):
+    """Tabla de la cola con un estado vacío que explica qué hacer (en lugar de un panel en blanco)."""
+
+    def __init__(self, *a):
+        super().__init__(*a)
+        m = self.model()
+        for sig in (m.rowsInserted, m.rowsRemoved, m.modelReset):
+            sig.connect(lambda *_: self.horizontalHeader().setVisible(self.rowCount() > 0))
+        self.horizontalHeader().setVisible(False)
+
+    def paintEvent(self, e):
+        super().paintEvent(e)
+        if self.rowCount():
+            return
+        from PySide6.QtGui import QColor, QPainter
+
+        t = tm().theme
+        p = QPainter(self.viewport())
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        r = self.viewport().rect()
+        pm = icons.pixmap("convert", t.accent, 44)
+        p.setOpacity(0.85)
+        p.drawPixmap(r.center().x() - 22, r.center().y() - 70, pm)
+        p.setOpacity(1.0)
+        p.setPen(QColor(t.text))
+        f = p.font()
+        f.setPointSizeF(f.pointSizeF() + 1.5)
+        f.setBold(True)
+        p.setFont(f)
+        p.drawText(r.adjusted(24, 0, -24, -10), Qt.AlignmentFlag.AlignCenter, tr("La cola está vacía"))
+        f.setBold(False)
+        f.setPointSizeF(f.pointSizeF() - 2)
+        p.setFont(f)
+        p.setPen(QColor(t.text2))
+        p.drawText(r.adjusted(32, r.height() // 2 + 18, -32, 0), Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop
+                   | Qt.TextFlag.TextWordWrap,
+                   tr("Añade archivos a la izquierda, elige el formato y pulsa «Convertir». Aquí verás el avance "
+                      "de cada uno, y podrás pausar, reintentar o abrir el resultado."))
 
 
 class ConverterPage(QWidget):
@@ -191,7 +233,9 @@ class ConverterPage(QWidget):
 
         self.out_dir = QLineEdit(settings.get("output_dir"))
         self.out_dir.setReadOnly(True)
-        pick_out = QPushButton("…")
+        pick_out = QPushButton(tr("Cambiar…"))
+        pick_out.setIcon(tm().icon("folder", 16))
+        pick_out.setToolTip(tr("Elegir la carpeta donde se guardan las conversiones"))
         pick_out.clicked.connect(self._pick_out)
         open_out = IconButton("external", tr("Abrir la carpeta de destino"), 16)
         open_out.clicked.connect(lambda: tools.reveal_in_explorer(self.out_dir.text()))
@@ -209,7 +253,8 @@ class ConverterPage(QWidget):
         ll = QVBoxLayout(left)
         ll.setContentsMargins(20, 18, 20, 18)
         ll.setSpacing(10)
-        ll.addLayout(h_layout(add_files, add_folder, None, clear))
+        self.count_label = label("", "muted")
+        ll.addLayout(h_layout(add_files, add_folder, None, self.count_label, clear))
         ll.addWidget(self.drop, 1)
         ll.addWidget(label("Formato", "h3"))
         ll.addLayout(self.targets_form)
@@ -224,7 +269,7 @@ class ConverterPage(QWidget):
 
         # ------------------------------------------------------------ panel derecho: cola
         right = GlassPanel(radius=22)
-        self.table = QTableWidget(0, 4)
+        self.table = QueueTable(0, 4)
         self.table.setHorizontalHeaderLabels([tr("Archivo"), tr("Estado"), tr("Progreso"), ""])
         self.table.verticalHeader().hide()
         self.table.verticalHeader().setDefaultSectionSize(44)
@@ -297,15 +342,23 @@ class ConverterPage(QWidget):
         self._refresh_staged()
 
     def _refresh_staged(self):
+        from aero.core.formats import human_size
+        from aero.ui.file_icons import icon_for
+
         self.drop.clear()
-        t = tm().theme
+        total = 0
         for p, _rel in self.staged:
             k = kind_of(p)
-            ic = {"image": "image", "audio": "music", "video": "video", "pdf": "pdf", "sheet": "sheet",
-                  "slides": "slides"}.get(k, "file")
-            it = QListWidgetItem(icons.icon(ic, t.text2, 18), f"{Path(p).name}   ·   {tr(KIND_LABELS.get(k, ''))}")
+            try:
+                size = os.path.getsize(p)
+            except OSError:
+                size = 0
+            total += size
+            it = QListWidgetItem(icon_for(p, 32), f"{Path(p).name}\n{tr(KIND_LABELS.get(k, ''))} · {human_size(size)}")
             it.setToolTip(p)
             self.drop.addItem(it)
+        n = len(self.staged)
+        self.count_label.setText(ntr("{n} archivo", "{n} archivos", n) + f" · {human_size(total)}" if n else "")
         self._rebuild_targets()
 
     def _remove_staged(self):
@@ -326,7 +379,8 @@ class ConverterPage(QWidget):
         for p, _ in self.staged:
             groups.setdefault(KIND_GROUP[kind_of(p)], p)
         if not groups:
-            self.targets_form.addRow(label("—", "caption"))
+            self.targets_form.addRow(label(tr("Añade archivos y elige aquí a qué formato convertirlos."), "caption",
+                                           wrap=True))
             self.go.setEnabled(False)
             self.estimate.setText("")
             return

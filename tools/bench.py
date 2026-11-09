@@ -10,6 +10,7 @@ from __future__ import annotations
 import ctypes
 import json
 import os
+os.environ.setdefault("AERO_NO_UPDATES", "1")   # sin consultar GitHub durante las comprobaciones
 import sys
 import tempfile
 import time

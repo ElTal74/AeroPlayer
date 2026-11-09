@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QFileDialog, QFormLayout
                                QKeySequenceEdit, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox,
                                QPushButton, QScrollArea, QSpinBox, QStackedWidget, QVBoxLayout, QWidget)
 
-from aero import APP_NAME, __version__
+from aero import APP_NAME, COPYRIGHT, UPDATE_REPO, __version__
 from aero.core import associations, tools
 from aero.core.config import DEFAULT_SHORTCUTS, SHORTCUT_LABELS
 from aero.core.paths import cache_dir, data_dir
@@ -395,11 +395,29 @@ class SettingsPage(QWidget):
         # ------------------------------------------------------------ acerca de
         p, lay = section(APP_NAME)
         lay.addWidget(label(tr("Versión {v}", v=__version__), "accent"))
-        lay.addWidget(label(tr("Software libre (GPL-3.0). Sin anuncios ni telemetría."), "muted"))
+        lay.addWidget(label(f"{COPYRIGHT}. " + tr("Todos los derechos reservados sobre el nombre y el logotipo."),
+                            "muted", wrap=True))
+        lay.addWidget(label(tr("Software libre (GPL-3.0): puedes usarlo, estudiarlo, modificarlo y compartirlo, "
+                               "manteniendo la autoría y la misma licencia. Sin anuncios ni telemetría."),
+                            "muted", wrap=True))
         lay.addWidget(label(tr("Licencias de terceros: THIRD_PARTY_NOTICES.md"), "caption"))
         tour2 = QPushButton(tr("Ver el tutorial"))
         tour2.clicked.connect(self.tutorial.emit)
-        lay.addLayout(h_layout(tour2, None))
+        gh = QPushButton(tr("Página del proyecto"))
+        gh.setProperty("kind", "flat")
+        gh.clicked.connect(lambda: tools.open_with_default(f"https://github.com/{UPDATE_REPO}"))
+        lay.addLayout(h_layout(tour2, gh, None))
+        add("about", p)
+
+        p, lay = section(tr("Actualizaciones"))
+        lay.addWidget(self._check("update_check", tr("Buscar versiones nuevas automáticamente")))
+        lay.addWidget(label(tr("Una vez al día como mucho, en GitHub. Nada se instala sin que pulses «Actualizar»; "
+                               "el instalador se comprueba con su suma SHA-256 y conserva tus ajustes y datos."),
+                            "caption", wrap=True))
+        self.upd_status = label("", "muted", wrap=True)
+        self.btn_upd = QPushButton(tr("Buscar ahora"))
+        self.btn_upd.clicked.connect(self._check_updates_now)
+        lay.addLayout(h_layout(self.btn_upd, self.upd_status, None))
         add("about", p)
 
         # ------------------------------------------------------------ navegación
@@ -529,6 +547,24 @@ class SettingsPage(QWidget):
         self._refresh_assoc()
         self.message.emit(tr("Registrado. Elige AERO Player en la Configuración de Windows."), "ok")
         associations.open_default_apps_settings()
+
+    def _check_updates_now(self):
+        from aero.ui.update_ui import check_in_background, show_update
+
+        self.btn_upd.setEnabled(False)
+        self.upd_status.setText(tr("Buscando…"))
+
+        def result(rel, err):
+            self.btn_upd.setEnabled(True)
+            if err:
+                self.upd_status.setText(tr("No se pudo consultar: {e}", e=err))
+            elif rel is None:
+                self.upd_status.setText(tr("Tienes la última versión ({v}).", v=__version__))
+            else:
+                self.upd_status.setText(tr("Versión nueva disponible: {v}", v=rel.version))
+                show_update(rel, self.s, None, self.window())
+
+        check_in_background(self.s, result, force=True, owner=self)
 
     def _toggle_foreign_icons(self, on: bool):
         from PySide6.QtWidgets import QMessageBox

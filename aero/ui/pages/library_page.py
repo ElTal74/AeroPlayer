@@ -20,7 +20,7 @@ from aero.core.scanner import LibraryScanner
 from aero.ui import icons
 from aero.ui.async_util import run_async
 from aero.ui.glass import IconButton, Spinner, h_layout, label, tm, v_layout
-from aero.i18n import tr
+from aero.i18n import ntr, tr
 
 PAGE = 400
 AUDIO_COLS = [("title", "Título"), ("artist", "Artista"), ("album", "Álbum"), ("duration", "Duración"),
@@ -164,7 +164,8 @@ class LibraryPage(QWidget):
         self.stats = label("", "caption")
         self.stats.hide()
         self.search.hide()  # la búsqueda vive en la barra superior de la ventana
-        header = h_layout(None, self.spinner, self.scan_label, self.pause_btn,
+        self.summary = label("", "h3")          # qué se está viendo: «24 canciones», «3 álbumes»…
+        header = h_layout(self.summary, None, self.spinner, self.scan_label, self.pause_btn,
                           self.cancel_btn, self.search, self.add_btn, self.scan_btn, spacing=8)
 
         self.tabs = QTabBar()
@@ -266,6 +267,7 @@ class LibraryPage(QWidget):
         tab = self.tabs.currentIndex()
         st = self.db.library_stats()
         self.setToolTip(tr("{v0} canciones · {v1} vídeos · {v2} · {v3}", v0=st['audio'], v1=st['video'], v2=human_time(st['duration']), v3=human_size(st['size'])))
+        self.summary.setText("")
         if st["audio"] + st["video"] == 0 and not s:
             self.body.setCurrentWidget(self.empty)
             self.play_all.hide()
@@ -273,6 +275,8 @@ class LibraryPage(QWidget):
             return
         if tab == 2:
             self._show_series(s)
+            if self.series_show is None:
+                self.summary.setText(ntr("{n} serie", "{n} series", self.groups.count()))
             return
         if tab in (0, 1) or self.group_filter is not None:
             kind = "video" if tab == 1 else "audio"
@@ -286,9 +290,16 @@ class LibraryPage(QWidget):
                 hdr.resizeSection(i, w)
             self.play_all.show()
             self.shuffle_all.show()
+            n = self.model.total
+            self.summary.setText(ntr("{n} canción", "{n} canciones", n) if kind == "audio" else
+                                 ntr("{n} vídeo", "{n} vídeos", n) if kind == "video" else
+                                 ntr("{n} elemento", "{n} elementos", n))
         else:
             self._fill_groups(tab, s)
             self.body.setCurrentWidget(self.groups)
+            n = self.groups.count()
+            self.summary.setText({3: ntr("{n} álbum", "{n} álbumes", n), 4: ntr("{n} artista", "{n} artistas", n),
+                                  5: ntr("{n} carpeta", "{n} carpetas", n)}.get(tab, ""))
             self.play_all.hide()
             self.shuffle_all.hide()
 

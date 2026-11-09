@@ -7,6 +7,7 @@ Coloca una ventana de franjas de colores detrás para demostrar la transparencia
 from __future__ import annotations
 
 import os
+os.environ.setdefault("AERO_NO_UPDATES", "1")   # sin consultar GitHub durante las comprobaciones
 import sys
 import tempfile
 import traceback

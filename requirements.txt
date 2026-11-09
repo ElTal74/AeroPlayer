@@ -1,6 +1,7 @@
 # Versiones fijadas y verificadas en Windows 11 + Python 3.14 (ver docs/PRUEBAS.md)
 PySide6-Essentials==6.12.0
 PySide6-Addons==6.12.0
+PySide6_Pdf==6.12.0.140        # visor PDF (QtPdf): en 6.12 va en un paquete aparte
 numpy==2.5.4
 pillow==13.0.0
 pillow_heif==1.8.1
@@ -26,3 +27,4 @@ py7zr==1.1.4
 pyzipper==0.4.0
 pycryptodomex==3.24.1
 pycdlib==1.22.0
+psutil==7.2.2

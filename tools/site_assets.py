@@ -10,6 +10,7 @@ las genera). Idioma de las capturas: el primer argumento (es-ES por defecto).
 from __future__ import annotations
 
 import os
+os.environ.setdefault("AERO_NO_UPDATES", "1")   # sin consultar GitHub durante las comprobaciones
 import sys
 import tempfile
 import traceback
@@ -18,13 +19,15 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / "website" / "assets"
-SHOTS = OUT / "capturas"
 ICONS = OUT / "iconos"
-for d in (SHOTS, ICONS):
-    d.mkdir(parents=True, exist_ok=True)
+ICONS.mkdir(parents=True, exist_ok=True)
 os.environ["AERO_DATA_DIR"] = tempfile.mkdtemp(prefix="aero_web_")
 os.environ["AERO_NO_TUTORIAL"] = "1"
 LANG = sys.argv[1] if len(sys.argv) > 1 else "es-ES"
+# carpeta de la web para cada idioma de la aplicación
+SITE_CODE = {"es-ES": "es", "en": "en", "de": "de", "it": "it", "pt-BR": "pt", "ru": "ru", "zh-CN": "zh"}[LANG]
+SHOTS = OUT / "capturas" / SITE_CODE
+SHOTS.mkdir(parents=True, exist_ok=True)
 M = ROOT / "tests" / "media"
 
 from PySide6.QtCore import QTimer  # noqa: E402
@@ -69,19 +72,52 @@ def step(ms, fn):
 
 def shot(w, name):
     app.processEvents()
-    w.grab().save(str(SHOTS / f"{name}.png"))
+    from shot_util import save
+
+    save(w, str(SHOTS / f"{name}.png"))
     print("captura", name, flush=True)
 
 
+# nombres de la carpeta de ejemplo en cada idioma: carpeta, subcarpetas y archivos (las extensiones se añaden)
+SAMPLE = {
+    "es": ("Mis archivos", ["Proyectos", "Música"],
+           ["Vacaciones en la playa", "Concierto", "Canción favorita", "Podcast", "Atardecer", "Logo", "Informe anual",
+            "Presupuesto", "Presentación", "Contrato", "Fotos del viaje", "Copia de seguridad", "Linux", "Película",
+            "Instalador", "script", "Tipografía"]),
+    "en": ("My files", ["Projects", "Music"],
+           ["Beach holiday", "Concert", "Favourite song", "Podcast", "Sunset", "Logo", "Annual report", "Budget",
+            "Presentation", "Contract", "Trip photos", "Backup", "Linux", "Movie", "Installer", "script", "Typeface"]),
+    "de": ("Meine Dateien", ["Projekte", "Musik"],
+           ["Strandurlaub", "Konzert", "Lieblingslied", "Podcast", "Sonnenuntergang", "Logo", "Jahresbericht", "Budget",
+            "Präsentation", "Vertrag", "Reisefotos", "Sicherung", "Linux", "Film", "Installer", "script", "Schriftart"]),
+    "it": ("I miei file", ["Progetti", "Musica"],
+           ["Vacanze al mare", "Concerto", "Canzone preferita", "Podcast", "Tramonto", "Logo", "Relazione annuale",
+            "Budget", "Presentazione", "Contratto", "Foto del viaggio", "Backup", "Linux", "Film", "Installer", "script",
+            "Carattere"]),
+    "pt": ("Meus arquivos", ["Projetos", "Música"],
+           ["Férias na praia", "Show", "Música favorita", "Podcast", "Pôr do sol", "Logo", "Relatório anual",
+            "Orçamento", "Apresentação", "Contrato", "Fotos da viagem", "Backup", "Linux", "Filme", "Instalador",
+            "script", "Fonte"]),
+    "ru": ("Мои файлы", ["Проекты", "Музыка"],
+           ["Отпуск на море", "Концерт", "Любимая песня", "Подкаст", "Закат", "Логотип", "Годовой отчёт", "Бюджет",
+            "Презентация", "Договор", "Фото из поездки", "Резервная копия", "Linux", "Фильм", "Установщик", "script",
+            "Шрифт"]),
+    "zh": ("我的文件", ["项目", "音乐"],
+           ["海滩假期", "音乐会", "最爱的歌", "播客", "日落", "标志", "年度报告", "预算", "演示文稿", "合同", "旅行照片",
+            "备份", "Linux", "电影", "安装程序", "script", "字体"]),
+}
+EXTS = [".mp4", ".mkv", ".mp3", ".flac", ".jpg", ".png", ".docx", ".xlsx", ".pptx", ".pdf", ".zip", ".7z", ".iso",
+        ".torrent", ".msi", ".py", ".ttf"]
+
+
 def sample_folder():
-    d = Path(tempfile.mkdtemp(prefix="Mis archivos "))
-    for n in ["Vacaciones en la playa.mp4", "Concierto.mkv", "Canción favorita.mp3", "Podcast.flac", "Atardecer.jpg",
-              "Logo.png", "Informe anual.docx", "Presupuesto.xlsx", "Presentación.pptx", "Contrato.pdf",
-              "Fotos del viaje.zip", "Copia de seguridad.7z", "Linux.iso", "Película.torrent", "Instalador.msi",
-              "script.py", "Tipografía.ttf"]:
-        (d / n).write_bytes(b"x")
-    (d / "Proyectos").mkdir()
-    (d / "Música").mkdir()
+    title, folders, names = SAMPLE[SITE_CODE]
+    d = Path(tempfile.mkdtemp(prefix="aero_web_files_")) / title    # sin sufijo aleatorio en el nombre visible
+    d.mkdir()
+    for n, ext in zip(names, EXTS, strict=True):
+        (d / (n + ext)).write_bytes(b"x")
+    for f in folders:
+        (d / f).mkdir()
     return d
 
 
@@ -106,7 +142,7 @@ step(100, lambda: (settings.set("theme", "burbuja"), state.update(ve=ctl.open_vi
 step(2000, lambda: (state["ve"].resize(1280, 780), shot(state["ve"], "editor_video")))
 step(100, lambda: (state["ve"].close(), state.update(paint=ctl.open_paint(""))))
 step(1500, lambda: (state["paint"].resize(1200, 760), shot(state["paint"], "paint")))
-step(300, lambda: (state["paint"].close(), ctl.quit()))
+step(300, lambda: (state["paint"].close(), print("ERRORS", errors, flush=True), os._exit(0)))
 
 
 def run(i=0):

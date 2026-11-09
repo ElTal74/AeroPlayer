@@ -1,5 +1,35 @@
 # Registro de cambios
 
+## 1.1.0 · Actualizaciones automáticas y más detalles
+
+- **Actualizaciones desde GitHub.**
+  - AERO Player avisa cuando hay una versión nueva y muestra sus novedades.
+  - Con el instalador se actualiza con un clic: descarga, comprueba la suma SHA-256 y conserva tus accesos
+    directos, el menú del clic derecho y las asociaciones.
+  - La versión portable avisa y abre la página de descarga.
+  - Si GitHub falla un momento, reintenta. Si github.com está caído, descarga por la API de GitHub.
+  - Se puede desactivar o buscar a mano en Ajustes › Acerca de.
+- **Novedades tras actualizar:** la primera vez que abres una versión nueva se muestra qué ha cambiado.
+- **Temporizador de apagado** en la barra del reproductor: 15 min a 2 h o al final de la pista, con el volumen
+  bajando poco a poco.
+- **Esquinas redondeadas en todas las ventanas,** también en el reproductor de vídeo, el visor y los editores.
+- **Conversor más claro.**
+  - La cola vacía explica qué hacer.
+  - Los archivos añadidos se ven con su icono, su carpeta y un recuento.
+  - Elegir la carpeta de salida es más fácil.
+- **Biblioteca:** resumen con el número de canciones, vídeos, álbumes, artistas, carpetas y series.
+- **Editor de vídeo:** el panel de medios y la línea de tiempo vacíos indican cómo empezar.
+- **Botones desactivados** más fáciles de distinguir.
+- **Arreglado:** al abrir varios archivos a la vez desde el menú del clic derecho, a veces llegaban por separado.
+- **Arreglado:** en las descargas de la versión 1.0.0 faltaba el componente del visor PDF. Por eso el visor no se
+  abría, tampoco con fotos ni documentos. Ahora la compilación comprueba que no falte nada, y si un día faltara el
+  visor PDF, solo fallarían los PDF y la aplicación diría por qué.
+- **Arreglado:** un cierre inesperado poco frecuente relacionado con los avisos de actualización y las novedades.
+- **Firma digital preparada:** los ejecutables se firman automáticamente cuando hay un certificado configurado.
+- **Copyright y licencia:** © 2026 David Seva Gonzalvez, GPL-3.0-or-later. Ver `NOTICE.md`.
+- **Web nueva** en 7 idiomas, con animaciones, capturas en el idioma de la página y una comparativa entre el
+  instalador y la versión portable.
+
 ## 1.0.0 · Primera versión pública
 
 AERO Player es un reproductor, visor y conjunto de herramientas multimedia para Windows 10 y 11. Tiene el estilo

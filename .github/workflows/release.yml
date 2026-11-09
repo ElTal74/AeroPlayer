@@ -29,19 +29,33 @@ jobs:
         run: |
           .venv\Scripts\python -m ruff check aero tests tools
           .venv\Scripts\python tools\i18n_keys.py --strict
+      - name: Certificado de firma (solo si está configurado como secreto)
+        env:
+          PFX_B64: ${{ secrets.AERO_SIGN_PFX_BASE64 }}
+        if: env.PFX_B64 != ''
+        run: |
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\firma.pfx", [Convert]::FromBase64String($env:PFX_B64))
+          "AERO_SIGN_PFX=$env:RUNNER_TEMP\firma.pfx" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
       - name: Compilar (núcleo Rust, programa, instalador y portable)
+        env:
+          AERO_SIGN_PASSWORD: ${{ secrets.AERO_SIGN_PASSWORD }}
         run: powershell -ExecutionPolicy Bypass -File packaging\build.ps1 -SkipTests
       - name: Comprobar el ejecutable
         run: |
           dist\AeroPlayer\AeroPlayer.exe --diagnostico diag.json
           Start-Sleep 5
           Get-Content diag.json
+          $d = Get-Content diag.json -Raw | ConvertFrom-Json
+          if (-not $d.qt_completo) { throw "Al ejecutable le falta un módulo de Qt (visor PDF o multimedia)." }
+      - name: Notas de la versión (su sección de CHANGELOG.md)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: .venv\Scripts\python tools\release_notes.py ${{ github.ref_name }} notas.md
       - name: Publicar la versión
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           name: AERO Player ${{ github.ref_name }}
-          body_path: CHANGELOG.md
+          body_path: notas.md
           files: |
             dist/AeroPlayer-*-setup.exe
             dist/AeroPlayer-*-portable.zip

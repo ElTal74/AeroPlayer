@@ -76,7 +76,35 @@ def test_ico_files_have_all_sizes(qapp, tmp_path):
     icon_export.export(tmp_path)                          # sin cambios no se reescribe
     assert files["video"].stat().st_mtime_ns == mtime
     for cat in PALETTE:                                    # los del paquete existen y están al día
-        assert (icon_export.icons_dir() / f"{cat}.ico").read_bytes() == icon_export.ico_bytes(cat), cat
+        # se comparan píxeles con tolerancia: el suavizado de Qt cambia algún byte entre equipos (pasó en GitHub)
+        shipped = _ico_images((icon_export.icons_dir() / f"{cat}.ico").read_bytes())
+        fresh = _ico_images(icon_export.ico_bytes(cat))
+        assert sorted(shipped) == sorted(fresh) == sorted(icon_export.SIZES), cat
+        for size in (32, 64):
+            assert _mean_diff(shipped[size], fresh[size]) < 4.0, (cat, size)
+
+
+def _ico_images(data: bytes) -> dict:
+    from PySide6.QtGui import QImage
+
+    n = struct.unpack("<H", data[4:6])[0]
+    out = {}
+    for i in range(n):
+        w, _h, _c, _x, _p, _b, ln, off = struct.unpack("<BBBBHHII", data[6 + 16 * i:22 + 16 * i])
+        out[w or 256] = QImage.fromData(data[off:off + ln]).convertToFormat(QImage.Format.Format_ARGB32)
+    return out
+
+
+def _mean_diff(a, b) -> float:
+    """Diferencia media por canal (0-255) entre dos imágenes del mismo tamaño."""
+    assert a.size() == b.size()
+    total = 0
+    for y in range(a.height()):
+        for x in range(a.width()):
+            ca, cb = a.pixelColor(x, y), b.pixelColor(x, y)
+            total += (abs(ca.red() - cb.red()) + abs(ca.green() - cb.green()) + abs(ca.blue() - cb.blue())
+                      + abs(ca.alpha() - cb.alpha()))
+    return total / (a.width() * a.height() * 4)
 
 
 def test_installer_category():
