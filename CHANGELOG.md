@@ -1,5 +1,17 @@
 # Registro de cambios
 
+## 1.3.1 · Vista rápida que no se amontona
+
+- **Arreglado: los botones de la vista rápida se montaban unos sobre otros** al abrir una foto pequeña o
+  estrechar la ventana (Editar, Recortar, Dibujar, Convertir, Carpeta…).
+  - Ahora la barra se adapta al ancho: con sitio muestra icono y texto; sin sitio, solo los iconos (el nombre
+    de cada acción aparece al pasar el ratón); y en ventanas muy pequeñas guarda las últimas acciones.
+  - Ningún botón se dibuja recortado, sea cual sea el tamaño de la ventana o la resolución.
+  - El nombre del archivo se acorta con «…» en lugar de empujar los botones.
+  - Vale también para la ventana de vídeo, música y documentos, que usa la misma barra.
+- **Web: arreglado el fondo al deslizar.** Las colinas subían sin límite, el césped se quedaba atrás y abajo
+  asomaba una franja casi blanca. Ahora suben juntos, con tope, y el fondo llega siempre hasta el borde.
+
 ## 1.3.0 · Letras, teclas multimedia y más estabilidad
 
 - **Letras sincronizadas.**

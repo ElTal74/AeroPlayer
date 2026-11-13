@@ -161,7 +161,9 @@
     var y = window.scrollY;
     layers.forEach(function (el) {
       var d = parseFloat(el.dataset.depth);
-      el.style.transform = "translate3d(" + (mx * d * 60).toFixed(1) + "px," + (-y * d + my * d * 30).toFixed(1) + "px,0)";
+      // data-max: tope de lo que sube con el scroll (las colinas y el césped van juntos y no dejan hueco debajo)
+      var up = el.dataset.max ? Math.min(y * d, parseFloat(el.dataset.max)) : y * d;
+      el.style.transform = "translate3d(" + (mx * d * 60).toFixed(1) + "px," + (-up + my * d * 30).toFixed(1) + "px,0)";
     });
   }
   if (!reduce) {

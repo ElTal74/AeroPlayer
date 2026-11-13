@@ -12,8 +12,9 @@
 .cloud, .hills { will-change: transform; }
 
 /* briznas de césped que se mecen sobre las colinas */
-.grass { position: absolute; left: 0; right: 0; bottom: 0; height: 34vh; min-height: 180px; pointer-events: none; }
-.grass i { position: absolute; bottom: 8%; width: 3px; border-radius: 3px 3px 0 0; transform-origin: bottom center;
+.grass { position: absolute; left: 0; right: 0; bottom: -48px; height: calc(34vh + 48px); min-height: 228px; pointer-events: none;
+  will-change: transform; }
+.grass i { position: absolute; bottom: calc(8% + 44px); width: 3px; border-radius: 3px 3px 0 0; transform-origin: bottom center;
   background: linear-gradient(180deg, #e9ffc9, #6fd03a 60%, #2c8f1e); opacity: .85;
   animation: sway 4s ease-in-out infinite alternate; }
 @keyframes sway { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }

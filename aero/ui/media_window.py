@@ -17,7 +17,8 @@ from pathlib import Path
 from PySide6.QtCore import QEasingCurve, QEvent, QObject, QPropertyAnimation, QRect, Qt, QTimer, Signal
 from PySide6.QtGui import QCursor, QGuiApplication, QKeySequence, QLinearGradient, QPainter, QShortcut, QColor
 from PySide6.QtMultimediaWidgets import QVideoWidget
-from PySide6.QtWidgets import QApplication, QHBoxLayout, QMenu, QSlider, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QMenu, QSizePolicy, QSlider, QStackedWidget,
+                               QVBoxLayout, QWidget)
 
 from aero.i18n import tr
 from aero.core.formats import AUDIO, human_size, human_time, kind_of
@@ -29,6 +30,40 @@ from aero.ui.glasswindow import RADIUS, DragArea, GlassWindow, OverlayWindow, ki
 from aero.ui.async_util import run_async
 
 WM_SIZING = 0x0214
+
+
+class ElideLabel(QLabel):
+    """Etiqueta de una línea que se acorta con «…» cuando no cabe (y enseña el texto entero al pasar el ratón)."""
+
+    def __init__(self, role: str | None = None, mode=Qt.TextElideMode.ElideRight, parent=None):
+        super().__init__(parent)
+        self._full = ""
+        self._mode = mode
+        if role:
+            self.setProperty("role", role)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.setMinimumWidth(0)
+
+    def setText(self, text: str) -> None:
+        self._full = text or ""
+        self._elide()
+
+    def text(self) -> str:
+        return self._full
+
+    def _elide(self) -> None:
+        shown = self.fontMetrics().elidedText(self._full, self._mode, max(0, self.width()))
+        super().setText(shown)
+        self.setToolTip(self._full if shown != self._full else "")
+
+    def resizeEvent(self, e):
+        super().resizeEvent(e)
+        self._elide()
+
+    def minimumSizeHint(self):
+        h = super().minimumSizeHint()
+        h.setWidth(0)
+        return h
 
 
 class _Shade(DragArea):
@@ -129,9 +164,10 @@ class MediaWindow(GlassWindow):
         self.overlay.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.overlay.drag_target = self
         self.shade = _Shade(self.overlay)
-        self.name = label("", "h3")
+        # Nombre y datos: se acortan con puntos suspensivos; nunca empujan ni tapan los botones
+        self.name = ElideLabel("h3", Qt.TextElideMode.ElideMiddle)
         self.name.setStyleSheet("color: white;")
-        self.info = label("", "caption")
+        self.info = ElideLabel("caption", Qt.TextElideMode.ElideRight)
         self.info.setStyleSheet("color: rgba(255,255,255,0.75);")
         self.btn_back = IconButton("back", tr("Volver (Retroceso)"), 16, button=32)
         self.btn_back.clicked.connect(self.go_back)
@@ -151,9 +187,13 @@ class MediaWindow(GlassWindow):
             self.winbtns.min.hide()
         for b in (self.btn_app, self.btn_full):
             b.setIcon(b.icon())
-        self.shade.setLayout(h_layout(8, self.btn_back, 6, v_layout(self.name, self.info, spacing=0), None, self.actions_bar, 6, self.btn_app,
-                                      self.btn_full,
-                                      8, self.winbtns, spacing=2, margins=(0, 8, 10, 18)))
+        self._titles = QWidget()
+        self._titles.setLayout(v_layout(self.name, self.info, spacing=0))
+        self._titles.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        head = h_layout(8, self.btn_back, 6, self._titles, 6, self.actions_bar, 6, self.btn_app, self.btn_full,
+                        8, self.winbtns, spacing=2, margins=(0, 8, 10, 18))
+        head.setStretchFactor(self._titles, 1)
+        self.shade.setLayout(head)
 
         # Cápsula inferior (flotante)
         # Cápsula inferior (flotante): fila de progreso opcional + fila de controles.
@@ -205,6 +245,7 @@ class MediaWindow(GlassWindow):
         self.aspect = 0.0
         self.btn_full.setVisible(self.kind in ("image", "video", "slides", "pdf"))
         self.actions_bar.set_path(self.path)
+        self._fit_header(self.width())
         self._clear_pill()
         if self.kind == "image":
             self._open_image()
@@ -692,6 +733,7 @@ class MediaWindow(GlassWindow):
                 self.overlay.show()
         w, h = self.width(), self.height()
         self.shade.setGeometry(0, 0, w, 64)
+        self._fit_header(w)
         media = self.kind in ("video", "audio")
         pw = min(w - 32, 760 if self.kind == "video" else 520)
         if self.kind == "audio":
@@ -710,6 +752,25 @@ class MediaWindow(GlassWindow):
                     sw.setFixedWidth(44 if narrow else side)
             except RuntimeError:
                 pass
+
+    TITLE_MIN = 110      # ancho que se reserva al nombre antes de pasar los botones a «solo iconos»
+
+    def _fit_header(self, w: int) -> None:
+        """Reparte la cabecera: lo fijo (volver, abrir, pantalla completa, ventana), las acciones y el nombre.
+
+        Con sitio, las acciones llevan texto; si no caben, quedan solo los iconos; y en ventanas muy
+        pequeñas se ocultan las últimas. Así ningún botón se monta sobre otro ni sale recortado.
+        """
+        fixed = 8 + 6 + 6 + 6 + 8 + 10                         # separaciones y margen derecho del diseño
+        for b in (self.btn_back, self.btn_app, self.btn_full, self.winbtns):
+            if not b.isHidden():
+                fixed += b.sizeHint().width() + 2
+        room = w - fixed
+        bar = self.actions_bar
+        if bar.buttons:
+            keep = self.TITLE_MIN if room - bar.compact_width() >= self.TITLE_MIN else 0
+            room -= bar.fit(max(bar.ICON_W, room - keep))
+        self._titles.setVisible(room >= 40)
 
     def resizeEvent(self, e):
         super().resizeEvent(e)

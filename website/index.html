@@ -32,17 +32,17 @@
  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
  "image": "https://eltal74.github.io/AeroPlayer/assets/og.png"}
 </script>
-<link rel="stylesheet" href="style.css?v=1.3.0">
-<link rel="stylesheet" href="anim.css?v=1.3.0">
-<script src="config.js?v=1.3.0"></script>
-<script src="i18n.js?v=1.3.0"></script>
+<link rel="stylesheet" href="style.css?v=1.3.1">
+<link rel="stylesheet" href="anim.css?v=1.3.1">
+<script src="config.js?v=1.3.1"></script>
+<script src="i18n.js?v=1.3.1"></script>
 </head>
 <body>
 <div class="sky" aria-hidden="true">
   <div class="sun"><div class="rays"></div></div>
   <div class="cloud c1" data-depth="0.15"></div><div class="cloud c2" data-depth="0.08"></div>
   <div class="cloud c3" data-depth="0.2"></div><div class="cloud c4" data-depth="0.05"></div>
-  <svg class="hills" viewBox="0 0 1440 320" preserveAspectRatio="none" data-depth="0.04">
+  <svg class="hills" viewBox="0 0 1440 320" preserveAspectRatio="none" data-depth="0.04" data-max="36">
     <defs>
       <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8f27a"/><stop offset=".45" stop-color="#5cc531"/><stop offset="1" stop-color="#1f7a1c"/></linearGradient>
       <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4fa9c"/><stop offset=".5" stop-color="#78d640"/><stop offset="1" stop-color="#2f8f25"/></linearGradient>
@@ -52,7 +52,7 @@
     <path d="M0 230 C 260 170 520 200 760 230 S 1180 270 1440 210 L1440 320 L0 320 Z" fill="url(#g2)"/>
     <path d="M0 232 C 260 172 520 202 760 232 S 1180 272 1440 212 L1440 236 C 1180 296 980 256 760 252 S 260 196 0 256 Z" fill="url(#shine)"/>
   </svg>
-  <div class="grass" id="grass"></div>
+  <div class="grass" id="grass" data-depth="0.04" data-max="36"></div>
 </div>
 <div class="bubbles" id="bubbles" aria-hidden="true"></div>
 
@@ -220,6 +220,6 @@
 </footer>
 
 <div class="lightbox" id="lightbox" hidden><img alt=""></div>
-<script src="app.js?v=1.3.0"></script>
+<script src="app.js?v=1.3.1"></script>
 </body>
 </html>

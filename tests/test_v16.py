@@ -93,7 +93,8 @@ def test_open_file_shows_contextual_actions(controller, qapp, media):
     pump(qapp, 1.0)
     mw = controller.media_windows[-1]
     bar = mw.actions_bar
-    assert bar.isVisible() and bar.buttons["edit"].text() == "Editar"
+    # la ventana de este vídeo es pequeña: la barra puede ir en modo «solo iconos» (el nombre se conserva)
+    assert bar.isVisible() and bar.buttons["edit"].accessibleName() == "Editar"
     bar.buttons["edit"].click()
     pump(qapp, 1.5)
     ed = next(w for w in controller.editors if isinstance(w, VideoEditor))

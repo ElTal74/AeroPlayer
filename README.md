@@ -74,10 +74,10 @@ Todas las descargas están en [Releases](https://github.com/ElTal74/AeroPlayer/r
 
 | Sistema | Descarga | Cómo |
 | --- | --- | --- |
-| Windows 10 y 11 (64 bits) | `AeroPlayer-1.3.0-setup.exe` | Instalador propio, no requiere administrador |
-| Windows (portable) | `AeroPlayer-1.3.0-portable.zip` | Descomprimir y ejecutar `AeroPlayer.exe` |
-| Linux (64 bits) | `AeroPlayer-1.3.0-linux-x86_64.tar.gz` | Descomprimir y ejecutar `./install.sh` (menú y «Abrir con») |
-| macOS 14+ (Apple Silicon) | `AeroPlayer-1.3.0-macos-arm64.dmg` | Arrastrar AERO Player a Aplicaciones; la primera vez, clic derecho › Abrir |
+| Windows 10 y 11 (64 bits) | `AeroPlayer-1.3.1-setup.exe` | Instalador propio, no requiere administrador |
+| Windows (portable) | `AeroPlayer-1.3.1-portable.zip` | Descomprimir y ejecutar `AeroPlayer.exe` |
+| Linux (64 bits) | `AeroPlayer-1.3.1-linux-x86_64.tar.gz` | Descomprimir y ejecutar `./install.sh` (menú y «Abrir con») |
+| macOS 14+ (Apple Silicon) | `AeroPlayer-1.3.1-macos-arm64.dmg` | Arrastrar AERO Player a Aplicaciones; la primera vez, clic derecho › Abrir |
 
 En Linux y macOS todo funciona igual salvo lo exclusivo del Explorador de Windows (iconos AERO, menú del clic
 derecho y vista rápida con Espacio). Para hacerlo predeterminado para todos tus archivos: **Ajustes › Archivos y
